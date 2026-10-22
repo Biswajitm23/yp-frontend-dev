@@ -1,0 +1,223 @@
+/*
+ * Quill 2.x read-only content styles — scoped to `.ql-render`.
+ *
+ * The admin panel authors rich text in the Quill editor (Snow theme). Quill's
+ * markup relies on its own stylesheet to render correctly: lists are <ol> with
+ * `li[data-list=bullet|ordered]` whose markers are drawn on an
+ * absolutely-positioned `.ql-ui::before`; block spacing comes from empty
+ * `<p><br></p>` lines (Quill zeroes every block margin); indent/alignment use
+ * `ql-indent-*` / `ql-align-*` classes. Rendering that HTML in a plain <div>
+ * (or with a hand-rolled approximation) drifts from the editor.
+ *
+ * These rules are vendored verbatim from quill@2.0.3 (quill.core.css + the
+ * content-level rules of quill.snow.css), transformed so every `.ql-editor`
+ * selector targets our `.ql-render` wrapper instead. Editor chrome (toolbar,
+ * tooltip, pickers, clipboard, placeholder) and the named colour/background/
+ * font-family classes are intentionally excluded — the app owns font + theme
+ * colour, and `sanitizeDescriptionHtml` strips the editor's inline
+ * font-family/colour/background. The result matches the Quill editor exactly
+ * for structure, spacing, lists, indentation and alignment.
+ *
+ * To regenerate after a Quill upgrade:
+ *   node scripts/gen-quill-content-css.mjs > src/styles/quill-content.css
+ * (see that script's header for details). Do not hand-edit the generated
+ * blocks below; edit the script or the "App overrides" block instead.
+ */
+
+/* ==== CORE (scoped .ql-render) ==== */
+.ql-render{box-sizing:border-box;counter-reset:list-0 list-1 list-2 list-3 list-4 list-5 list-6 list-7 list-8 list-9;line-height:1.42;height:100%;outline:none;overflow-y:auto;padding:12px 15px;tab-size:4;-moz-tab-size:4;text-align:left;white-space:pre-wrap;word-wrap:break-word}
+.ql-render p,.ql-render ol,.ql-render pre,.ql-render blockquote,.ql-render h1,.ql-render h2,.ql-render h3,.ql-render h4,.ql-render h5,.ql-render h6{margin:0;padding:0}
+@supports (counter-set:none){.ql-render p,.ql-render h1,.ql-render h2,.ql-render h3,.ql-render h4,.ql-render h5,.ql-render h6{counter-set:list-0 list-1 list-2 list-3 list-4 list-5 list-6 list-7 list-8 list-9}}
+@supports not (counter-set:none){.ql-render p,.ql-render h1,.ql-render h2,.ql-render h3,.ql-render h4,.ql-render h5,.ql-render h6{counter-reset:list-0 list-1 list-2 list-3 list-4 list-5 list-6 list-7 list-8 list-9}}
+.ql-render table{border-collapse:collapse}
+.ql-render td{border:1px solid #000;padding:2px 5px}
+.ql-render ol{padding-left:1.5em}
+.ql-render li{list-style-type:none;padding-left:1.5em;position:relative}
+.ql-render li > .ql-ui:before{display:inline-block;margin-left:-1.5em;margin-right:.3em;text-align:right;white-space:nowrap;width:1.2em}
+.ql-render li[data-list=checked] > .ql-ui,.ql-render li[data-list=unchecked] > .ql-ui{color:#777}
+.ql-render li[data-list=bullet] > .ql-ui:before{content:'\2022'}
+.ql-render li[data-list=checked] > .ql-ui:before{content:'\2611'}
+.ql-render li[data-list=unchecked] > .ql-ui:before{content:'\2610'}
+@supports (counter-set:none){.ql-render li[data-list]{counter-set:list-1 list-2 list-3 list-4 list-5 list-6 list-7 list-8 list-9}}
+@supports not (counter-set:none){.ql-render li[data-list]{counter-reset:list-1 list-2 list-3 list-4 list-5 list-6 list-7 list-8 list-9}}
+.ql-render li[data-list=ordered]{counter-increment:list-0}
+.ql-render li[data-list=ordered] > .ql-ui:before{content:counter(list-0, decimal) '. '}
+.ql-render li[data-list=ordered].ql-indent-1{counter-increment:list-1}
+.ql-render li[data-list=ordered].ql-indent-1 > .ql-ui:before{content:counter(list-1, lower-alpha) '. '}
+@supports (counter-set:none){.ql-render li[data-list].ql-indent-1{counter-set:list-2 list-3 list-4 list-5 list-6 list-7 list-8 list-9}}
+@supports not (counter-set:none){.ql-render li[data-list].ql-indent-1{counter-reset:list-2 list-3 list-4 list-5 list-6 list-7 list-8 list-9}}
+.ql-render li[data-list=ordered].ql-indent-2{counter-increment:list-2}
+.ql-render li[data-list=ordered].ql-indent-2 > .ql-ui:before{content:counter(list-2, lower-roman) '. '}
+@supports (counter-set:none){.ql-render li[data-list].ql-indent-2{counter-set:list-3 list-4 list-5 list-6 list-7 list-8 list-9}}
+@supports not (counter-set:none){.ql-render li[data-list].ql-indent-2{counter-reset:list-3 list-4 list-5 list-6 list-7 list-8 list-9}}
+.ql-render li[data-list=ordered].ql-indent-3{counter-increment:list-3}
+.ql-render li[data-list=ordered].ql-indent-3 > .ql-ui:before{content:counter(list-3, decimal) '. '}
+@supports (counter-set:none){.ql-render li[data-list].ql-indent-3{counter-set:list-4 list-5 list-6 list-7 list-8 list-9}}
+@supports not (counter-set:none){.ql-render li[data-list].ql-indent-3{counter-reset:list-4 list-5 list-6 list-7 list-8 list-9}}
+.ql-render li[data-list=ordered].ql-indent-4{counter-increment:list-4}
+.ql-render li[data-list=ordered].ql-indent-4 > .ql-ui:before{content:counter(list-4, lower-alpha) '. '}
+@supports (counter-set:none){.ql-render li[data-list].ql-indent-4{counter-set:list-5 list-6 list-7 list-8 list-9}}
+@supports not (counter-set:none){.ql-render li[data-list].ql-indent-4{counter-reset:list-5 list-6 list-7 list-8 list-9}}
+.ql-render li[data-list=ordered].ql-indent-5{counter-increment:list-5}
+.ql-render li[data-list=ordered].ql-indent-5 > .ql-ui:before{content:counter(list-5, lower-roman) '. '}
+@supports (counter-set:none){.ql-render li[data-list].ql-indent-5{counter-set:list-6 list-7 list-8 list-9}}
+@supports not (counter-set:none){.ql-render li[data-list].ql-indent-5{counter-reset:list-6 list-7 list-8 list-9}}
+.ql-render li[data-list=ordered].ql-indent-6{counter-increment:list-6}
+.ql-render li[data-list=ordered].ql-indent-6 > .ql-ui:before{content:counter(list-6, decimal) '. '}
+@supports (counter-set:none){.ql-render li[data-list].ql-indent-6{counter-set:list-7 list-8 list-9}}
+@supports not (counter-set:none){.ql-render li[data-list].ql-indent-6{counter-reset:list-7 list-8 list-9}}
+.ql-render li[data-list=ordered].ql-indent-7{counter-increment:list-7}
+.ql-render li[data-list=ordered].ql-indent-7 > .ql-ui:before{content:counter(list-7, lower-alpha) '. '}
+@supports (counter-set:none){.ql-render li[data-list].ql-indent-7{counter-set:list-8 list-9}}
+@supports not (counter-set:none){.ql-render li[data-list].ql-indent-7{counter-reset:list-8 list-9}}
+.ql-render li[data-list=ordered].ql-indent-8{counter-increment:list-8}
+.ql-render li[data-list=ordered].ql-indent-8 > .ql-ui:before{content:counter(list-8, lower-roman) '. '}
+@supports (counter-set:none){.ql-render li[data-list].ql-indent-8{counter-set:list-9}}
+@supports not (counter-set:none){.ql-render li[data-list].ql-indent-8{counter-reset:list-9}}
+.ql-render li[data-list=ordered].ql-indent-9{counter-increment:list-9}
+.ql-render li[data-list=ordered].ql-indent-9 > .ql-ui:before{content:counter(list-9, decimal) '. '}
+.ql-render .ql-indent-1:not(.ql-direction-rtl){padding-left:3em}
+.ql-render li.ql-indent-1:not(.ql-direction-rtl){padding-left:4.5em}
+.ql-render .ql-indent-1.ql-direction-rtl.ql-align-right{padding-right:3em}
+.ql-render li.ql-indent-1.ql-direction-rtl.ql-align-right{padding-right:4.5em}
+.ql-render .ql-indent-2:not(.ql-direction-rtl){padding-left:6em}
+.ql-render li.ql-indent-2:not(.ql-direction-rtl){padding-left:7.5em}
+.ql-render .ql-indent-2.ql-direction-rtl.ql-align-right{padding-right:6em}
+.ql-render li.ql-indent-2.ql-direction-rtl.ql-align-right{padding-right:7.5em}
+.ql-render .ql-indent-3:not(.ql-direction-rtl){padding-left:9em}
+.ql-render li.ql-indent-3:not(.ql-direction-rtl){padding-left:10.5em}
+.ql-render .ql-indent-3.ql-direction-rtl.ql-align-right{padding-right:9em}
+.ql-render li.ql-indent-3.ql-direction-rtl.ql-align-right{padding-right:10.5em}
+.ql-render .ql-indent-4:not(.ql-direction-rtl){padding-left:12em}
+.ql-render li.ql-indent-4:not(.ql-direction-rtl){padding-left:13.5em}
+.ql-render .ql-indent-4.ql-direction-rtl.ql-align-right{padding-right:12em}
+.ql-render li.ql-indent-4.ql-direction-rtl.ql-align-right{padding-right:13.5em}
+.ql-render .ql-indent-5:not(.ql-direction-rtl){padding-left:15em}
+.ql-render li.ql-indent-5:not(.ql-direction-rtl){padding-left:16.5em}
+.ql-render .ql-indent-5.ql-direction-rtl.ql-align-right{padding-right:15em}
+.ql-render li.ql-indent-5.ql-direction-rtl.ql-align-right{padding-right:16.5em}
+.ql-render .ql-indent-6:not(.ql-direction-rtl){padding-left:18em}
+.ql-render li.ql-indent-6:not(.ql-direction-rtl){padding-left:19.5em}
+.ql-render .ql-indent-6.ql-direction-rtl.ql-align-right{padding-right:18em}
+.ql-render li.ql-indent-6.ql-direction-rtl.ql-align-right{padding-right:19.5em}
+.ql-render .ql-indent-7:not(.ql-direction-rtl){padding-left:21em}
+.ql-render li.ql-indent-7:not(.ql-direction-rtl){padding-left:22.5em}
+.ql-render .ql-indent-7.ql-direction-rtl.ql-align-right{padding-right:21em}
+.ql-render li.ql-indent-7.ql-direction-rtl.ql-align-right{padding-right:22.5em}
+.ql-render .ql-indent-8:not(.ql-direction-rtl){padding-left:24em}
+.ql-render li.ql-indent-8:not(.ql-direction-rtl){padding-left:25.5em}
+.ql-render .ql-indent-8.ql-direction-rtl.ql-align-right{padding-right:24em}
+.ql-render li.ql-indent-8.ql-direction-rtl.ql-align-right{padding-right:25.5em}
+.ql-render .ql-indent-9:not(.ql-direction-rtl){padding-left:27em}
+.ql-render li.ql-indent-9:not(.ql-direction-rtl){padding-left:28.5em}
+.ql-render .ql-indent-9.ql-direction-rtl.ql-align-right{padding-right:27em}
+.ql-render li.ql-indent-9.ql-direction-rtl.ql-align-right{padding-right:28.5em}
+.ql-render li.ql-direction-rtl{padding-right:1.5em}
+.ql-render li.ql-direction-rtl > .ql-ui:before{margin-left:.3em;margin-right:-1.5em;text-align:left}
+.ql-render table{table-layout:fixed;width:100%}
+.ql-render table td{outline:none}
+.ql-render .ql-code-block-container{font-family:monospace}
+.ql-render .ql-video{display:block;max-width:100%}
+.ql-render .ql-video.ql-align-center{margin:0 auto}
+.ql-render .ql-video.ql-align-right{margin:0 0 0 auto}
+.ql-render .ql-size-small{font-size:.75em}
+.ql-render .ql-size-large{font-size:1.5em}
+.ql-render .ql-size-huge{font-size:2.5em}
+.ql-render .ql-direction-rtl{direction:rtl;text-align:inherit}
+.ql-render .ql-align-center{text-align:center}
+.ql-render .ql-align-justify{text-align:justify}
+.ql-render .ql-align-right{text-align:right}
+.ql-render .ql-ui{position:absolute}
+
+/* ==== SNOW CONTENT (scoped .ql-render) ==== */
+.ql-render h1{font-size:2em}
+.ql-render h2{font-size:1.5em}
+.ql-render h3{font-size:1.17em}
+.ql-render h4{font-size:1em}
+.ql-render h5{font-size:.83em}
+.ql-render h6{font-size:.67em}
+.ql-render a{text-decoration:underline}
+.ql-render blockquote{border-left:4px solid #ccc;margin-bottom:5px;margin-top:5px;padding-left:16px}
+.ql-render code,.ql-render .ql-code-block-container{background-color:#f0f0f0;border-radius:3px}
+.ql-render .ql-code-block-container{margin-bottom:5px;margin-top:5px;padding:5px 10px}
+.ql-render code{font-size:85%;padding:2px 4px}
+.ql-render .ql-code-block-container{background-color:#23241f;color:#f8f8f2;overflow:visible}
+.ql-render img{max-width:100%}
+
+/* ==== App overrides ==== */
+/* This is a read-only view, not an editor: drop Quill's editor chrome (fixed
+   height, scroll, padding) and inherit the app's font + theme text colour.
+   The theme colour is provided by the wrapper's own class (e.g. .htmlContent),
+   which is why we only inherit here rather than hardcoding a colour. */
+.ql-render {
+  height: auto;
+  overflow: visible;
+  padding: 0;
+  font-family: inherit;
+  color: inherit;
+  /* Match the Quill editor's own typography so descriptions render exactly like
+     the editor. `!important` overrides the looser line-height / lighter weight
+     some consumer wrapper classes set on this same element (e.g.
+     jobDetails_job_details_description_text uses line-height:22px; font-weight:300).
+     Bold stays bold: <strong>/<b>/<h*> carry their own weight, so only the
+     inherited base weight is normalised here. Font-size is left to the consumer. */
+  line-height: 1.42 !important;
+  font-weight: 400 !important;
+}
+/* Links match the app's rich-text link styling. */
+.ql-render a {
+  color: #60a5fa;
+  text-decoration: underline;
+  word-break: break-word;
+}
+.ql-render a:hover {
+  opacity: 0.8;
+}
+.ql-render img {
+  height: auto;
+}
+
+/* --- Plain (non-Quill) list markup -------------------------------------
+   Quill 2 emits lists as <ol> whose <li> carry `data-list` plus a `.ql-ui`
+   span, and draws the marker on `.ql-ui::before` — which is why the core
+   rule above sets `list-style-type: none` on EVERY li.
+
+   A lot of admin content isn't Quill-shaped though. Job descriptions come
+   through as plain `<ul><li><p>…</p></li></ul>` (authored elsewhere, pasted
+   as raw HTML, or saved by an older editor). Those li's have no `data-list`
+   and no `.ql-ui`, so Quill's rule removed their native marker and nothing
+   drew a replacement — they rendered as indented text with no bullet at all.
+
+   Restore native markers for exactly that case. Everything is guarded on
+   `:not([data-list])`, so genuine Quill lists are untouched. */
+.ql-render ul,
+.ql-render ol {
+  /* Tailwind preflight zeroes list padding; the marker needs room to sit in,
+     since `list-style-position` is `outside`. Matches Quill's own `ol` inset. */
+  padding-left: 1.5em;
+}
+
+.ql-render li:not([data-list]) {
+  list-style-type: disc;
+  /* Undo the 1.5em Quill reserves for its absolutely-positioned `.ql-ui`;
+     the native marker lives in the list's padding instead. */
+  padding-left: 0;
+}
+
+.ql-render ol > li:not([data-list]) {
+  list-style-type: decimal;
+}
+
+.ql-render ul ul > li:not([data-list]) {
+  list-style-type: circle;
+}
+
+.ql-render ul ul ul > li:not([data-list]) {
+  list-style-type: square;
+}
+
+/* `<li><p>text</p></li>` is the common shape here — keep the paragraph inline
+   with its marker rather than letting it start a new block run. */
+.ql-render li > p:only-child {
+  margin: 0;
+}

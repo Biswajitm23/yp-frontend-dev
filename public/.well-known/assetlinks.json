@@ -1,0 +1,13 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.youngprofessionals.ypapp",
+      "sha256_cert_fingerprints": [
+        "EF:07:E4:4D:CE:C6:2A:4B:65:A1:8A:34:61:2F:84:68:75:5F:E0:8C:34:6A:01:84:0B:4F:4C:F0:7B:ED:FE:B1",
+        "BC:92:F7:E1:37:B9:66:06:5E:A2:BC:3E:48:42:2D:9C:84:EE:C5:63:BA:C1:51:12:BE:6C:66:E8:85:4D:D6:F4"
+      ]
+    }
+  }
+]

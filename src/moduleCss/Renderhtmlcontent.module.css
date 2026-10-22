@@ -1,0 +1,46 @@
+/*
+ * Theme text colours for admin rich-text (Quill) descriptions.
+ *
+ * Structure, spacing, lists, indentation and alignment now come from the shared
+ * `.ql-render` stylesheet (src/styles/quill-content.css), which is Quill's own
+ * content CSS and renders the editor's HTML faithfully. This module only forces
+ * the app's light/dark text colour so copy stays readable in both themes. The
+ * `!important` guards against any residual inline colour (the sanitizer already
+ * strips inline color/background, so this is belt-and-suspenders).
+ */
+
+/* Dark theme (default) → white text. */
+.htmlContent,
+.htmlContent p,
+.htmlContent li,
+.htmlContent span,
+.htmlContent div,
+.htmlContent strong,
+.htmlContent b,
+.htmlContent em,
+.htmlContent h1,
+.htmlContent h2,
+.htmlContent h3,
+.htmlContent h4,
+.htmlContent h5,
+.htmlContent h6 {
+  color: #ffffff !important;
+}
+
+/* Light theme → black text. */
+:global(:root:not(.dark)) .htmlContent,
+:global(:root:not(.dark)) .htmlContent p,
+:global(:root:not(.dark)) .htmlContent li,
+:global(:root:not(.dark)) .htmlContent span,
+:global(:root:not(.dark)) .htmlContent div,
+:global(:root:not(.dark)) .htmlContent strong,
+:global(:root:not(.dark)) .htmlContent b,
+:global(:root:not(.dark)) .htmlContent em,
+:global(:root:not(.dark)) .htmlContent h1,
+:global(:root:not(.dark)) .htmlContent h2,
+:global(:root:not(.dark)) .htmlContent h3,
+:global(:root:not(.dark)) .htmlContent h4,
+:global(:root:not(.dark)) .htmlContent h5,
+:global(:root:not(.dark)) .htmlContent h6 {
+  color: #000000 !important;
+}
