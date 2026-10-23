@@ -14,6 +14,16 @@ import {
   ACCOUNT_INACTIVE_REASON,
   ACCOUNT_INACTIVE_TOAST,
 } from '@/lib/sessionExpiry'
+import {
+  SOCIAL_NO_ACCOUNT_REASON,
+  SOCIAL_NO_ACCOUNT_TOAST,
+} from '@/lib/socialAuthIntent'
+
+// `reason` flags a redirect can carry to /auth, and the toast each one raises.
+const REASON_TOASTS: Record<string, string> = {
+  [ACCOUNT_INACTIVE_REASON]: ACCOUNT_INACTIVE_TOAST,
+  [SOCIAL_NO_ACCOUNT_REASON]: SOCIAL_NO_ACCOUNT_TOAST,
+}
 
 const SignUpLogIn = () => {
   // Derive the initial tab from the URL: `tab=login` opens the Login view,
@@ -26,23 +36,26 @@ const SignUpLogIn = () => {
     (searchParams.get('tab') ?? searchParams.get('mode')) === 'login'
       ? 'login'
       : 'signup'
-  const [activeTab, setActiveTab] = useState(initialTab)
+  const [activeTab, setActiveTab] = useState<'login' | 'signup'>(initialTab)
 
   // `reason=account-inactive` is set when the app tore down a session whose
-  // backend account was deleted/deactivated (src/lib/sessionExpiry.ts). It can't
-  // be toasted at the source — that redirect is a full page load, which would
-  // wipe the toast — so it's carried on the URL and raised here instead.
+  // backend account was deleted/deactivated (src/lib/sessionExpiry.ts);
+  // `reason=social-no-account` when a social LOGIN found no account
+  // (src/auth.ts). Neither can be toasted at the source — the redirect is a
+  // full page load, which would wipe the toast — so it's carried on the URL
+  // and raised here instead.
   const router = useRouter()
   const toastedRef = useRef(false)
 
   useEffect(() => {
-    if (searchParams.get('reason') !== ACCOUNT_INACTIVE_REASON) return
+    const reasonToast = REASON_TOASTS[searchParams.get('reason') ?? '']
+    if (!reasonToast) return
     // Guard: StrictMode double-invokes effects in dev, and the URL below is
     // rewritten asynchronously, so both passes would still see the param.
     if (toastedRef.current) return
     toastedRef.current = true
 
-    toast.error(ACCOUNT_INACTIVE_TOAST, { autoClose: 6000 })
+    toast.error(reasonToast, { autoClose: 6000 })
 
     // Drop the flag so a refresh or a back-navigation doesn't re-raise it.
     const params = new URLSearchParams(searchParams.toString())
@@ -151,13 +164,13 @@ const SignUpLogIn = () => {
           <p className='text-normal mb-[30px] text-center'>or continue with</p>
           <div className='social-login-wrapper '>
             <div className='social-media-btn'>
-              <SignInGoogle />
+              <SignInGoogle mode={activeTab} />
             </div>
             <div className='social-media-btn'>
-              <SignInApple />
+              <SignInApple mode={activeTab} />
             </div>
             <div className='social-media-btn'>
-              <SignInLinkedin />
+              <SignInLinkedin mode={activeTab} />
             </div>
 
             {/* <div className="social-media-btn">

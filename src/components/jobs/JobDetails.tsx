@@ -1,5 +1,5 @@
 'use client'
-import { MapPin, Info, User, Bookmark, Briefcase } from 'lucide-react'
+import { MapPin, Info, User, Bookmark, Briefcase, Sparkles } from 'lucide-react'
 import BuildingIcon from '@/_assets/icons/header_icons/clarity_building-solid.svg'
 import styles from '../../moduleCss/jobDetails.module.css'
 import Image from 'next/image'
@@ -533,6 +533,13 @@ export default function JobDetails ({ jobId }: Props) {
   }
 
   // Data Section
+  // Same check as the job listing cards: accept true / 1 / "1" / "true" so a
+  // string "0" can't light the strip up by being truthy.
+  const isFeatured =
+    job?.data?.is_featured === true ||
+    job?.data?.is_featured == 1 ||
+    job?.data?.is_featured === 'true'
+
   const jobLocations: string[] = job?.data?.location?.length
     ? job.data.location
     : []
@@ -607,9 +614,24 @@ export default function JobDetails ({ jobId }: Props) {
             style={{
               background: isLight ? 'transparent' : '',
               position: 'relative',
-              padding: '24px'
+              padding: '24px',
+              // Room for the Featured corner strip so it never covers the logo,
+              // plus the same gold border as featured listing cards.
+              ...(isFeatured
+                ? {
+                    paddingTop: '44px',
+                    borderColor: isLight ? '#f0b54a' : '#f5b94280'
+                  }
+                : {})
             }}
           >
+            {/* Featured corner strip — same design as the job listing cards */}
+            {isFeatured ? (
+              <span className={jobstyles.jobListing_featured_strip}>
+                <Sparkles aria-hidden='true' />
+                Featured
+              </span>
+            ) : null}
             {/* Bounce + tooltip keyframes */}
             <style>{`
               @keyframes jd-bounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(3px)} }

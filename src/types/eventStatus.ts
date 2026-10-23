@@ -109,9 +109,9 @@ export function getProvisionalCtaLabel(state: ProvisionalCtaState): string {
     case 'not_started':
       return 'Apply Now'
     case 'registration_started':
-      return 'Complete Survey Monkey  Form'
+      return 'Complete the online form'
     case 'conditional_place':
-      return 'Complete Survey Monkey  Form'
+      return 'Complete the online form'
     case 'confirmed':
       return 'View booking'
     case 'not_selected':

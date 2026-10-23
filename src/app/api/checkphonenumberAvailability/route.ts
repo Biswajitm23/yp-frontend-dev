@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
+// TEMP: backend migration (VM -> Cloud Run) — remove after cutover
+import { getBackendUrl } from "@/lib/backendUrl";
 
 /**
  * POST /api/checkphonenumberAvailability
@@ -13,7 +15,9 @@ import { cookies } from "next/headers";
  * so the caller can distinguish "in use" from "backend down".
  */
 export async function POST(req: NextRequest) {
-  const BACKEND = process.env.BACKEND_URL!;
+  // TEMP: backend migration (VM -> Cloud Run) — remove after cutover
+  // const BACKEND = process.env.BACKEND_URL!;  (restore this line on revert)
+  const BACKEND = await getBackendUrl();
   try {
     const cookieStore = await cookies();
     const accessToken = cookieStore.get("access")?.value;

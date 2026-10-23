@@ -1,7 +1,7 @@
 'use client'
 
 import React from 'react'
-import { Bookmark, LoaderCircle } from 'lucide-react'
+import { Bookmark, LoaderCircle, Sparkles } from 'lucide-react'
 import styles from '@/moduleCss/jobs.module.css'
 import { LogoWithFallback } from './InitialAvatar'
 import JobLocations from './JobLocations'
@@ -23,6 +23,15 @@ import { getTimeAgoJobListing } from '@/helpers/dateFormatter'
 // Return the job's short_description as a tidy single-paragraph snippet (strips
 // any HTML from a rich-text field). Returns null when absent so the card can
 // hide the line entirely instead of showing placeholder text.
+// `is_featured` arrives as a boolean today; also accept 1 / "1" / "true" so a
+// string "0" from the backend can't light up the strip by being truthy.
+// Mirrors the main /jobs listing (JobListing.tsx) exactly so Company →
+// Opportunities and Job Details → Similar Jobs mark featured jobs identically.
+const isFeaturedJob = (job: any): boolean =>
+  job?.is_featured === true ||
+  job?.is_featured == 1 ||
+  job?.is_featured === 'true'
+
 const getJobShortDescription = (job: any): string | null => {
   const raw = job?.short_description
   if (typeof raw === 'string' && raw.trim()) {
@@ -106,10 +115,18 @@ const JobCard: React.FC<JobCardProps> = ({
 
   return (
     <div
-      className={`${styles.jobListing_job_item} card-hover ${className ?? ''}`}
+      className={`${styles.jobListing_job_item} ${
+        isFeaturedJob(job) ? styles.jobListing_job_item_featured : ''
+      } card-hover ${className ?? ''}`}
       onClick={onCardClick}
       style={{ cursor: 'pointer' }}
     >
+      {isFeaturedJob(job) ? (
+        <span className={styles.jobListing_featured_strip}>
+          <Sparkles aria-hidden='true' />
+          Featured
+        </span>
+      ) : null}
       <div className={styles.jobListing_card_main}>
         {/* Row 1: circle logo | title + company | save */}
         <div className={styles.jobListing_job_item_header}>

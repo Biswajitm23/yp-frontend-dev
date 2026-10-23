@@ -1,29 +1,5 @@
-# dependencies
 node_modules
-/.pnp
-.pnp.*
 
-# next.js / build output
-/.next/
-/out/
-/build
-*.tsbuildinfo
-next-env.d.ts
-
-# env files (secrets) — never commit
-.env
-.env.*
+# env files (never commit secrets)
+.env*
 !.env.example
-
-# vercel
-.vercel
-
-# testing
-/coverage
-
-# logs / misc
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-.DS_Store
-*.pem

@@ -2,8 +2,10 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { buildClientHeaders } from "@/lib/clientMeta";
+// TEMP: backend migration (VM -> Cloud Run) — remove after cutover
+import { getBackendUrl } from "@/lib/backendUrl";
 
-const BACKEND = process.env.BACKEND_URL || ""; // e.g. "http://localhost:8000"
+// const BACKEND = process.env.BACKEND_URL || ""; // e.g. "http://localhost:8000"  // TEMP: backend migration (VM -> Cloud Run) — remove after cutover (restore this line; BACKEND is now resolved at request time inside POST)
 
 function isValidEmail(email?: string) {
   if (!email) return false;
@@ -21,6 +23,8 @@ function isValidPhone(phone?: string) {
 
 export async function POST(req: NextRequest) {
   try {
+    // TEMP: backend migration (VM -> Cloud Run) — remove after cutover
+    const BACKEND = await getBackendUrl();
     const body = await req.json();
     const clientHeaders = buildClientHeaders(req.cookies, req.headers);
 

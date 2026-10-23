@@ -18,6 +18,7 @@ import {
   fetchAppliedJobsAction,
   fetchSavedJobsAction,
   fetchRecomendedJobsAction,
+  fetchFeaturedJobsAction,
 } from "@/app/actions/jobs";
 import { UnauthenticatedError } from "@/lib/authError";
 
@@ -85,6 +86,16 @@ export const fetchSavedJobs = async (payload: FetchJobsPayload) => {
   if (res.status !== "OK") {
     if (res.code === "UNAUTHENTICATED") throw new UnauthenticatedError(res.message);
     throw new Error(res.message || "Failed to fetch saved jobs");
+  }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return (res.data as any)?.data;
+};
+
+export const fetchFeaturedJobs = async (payload: FetchJobsPayload) => {
+  const res = await fetchFeaturedJobsAction(payload);
+  if (res.status !== "OK") {
+    if (res.code === "UNAUTHENTICATED") throw new UnauthenticatedError(res.message);
+    throw new Error(res.message || "Failed to fetch featured jobs");
   }
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return (res.data as any)?.data;

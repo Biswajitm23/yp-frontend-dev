@@ -177,8 +177,8 @@ const RegistrationStartedModal = ({
           }}
         >
           Your place is not confirmed yet. To complete your registration, please
-          fill in the SurveyMonkey form. Young Professionals will review
-          submissions and email you separately if your place is confirmed.
+          complete the online form. We will review submissions and email you
+          separately if your place is confirmed.
         </p>
 
         {/* Warning box */}
@@ -224,7 +224,7 @@ const RegistrationStartedModal = ({
             }}
           >
             Please do not attend the event unless you have received a
-            confirmation email from Young Professionals.
+            confirmation email from us.
           </p>
         </div>
       </div>

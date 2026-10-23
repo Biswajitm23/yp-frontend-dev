@@ -3,18 +3,23 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import {
   setAuthCookiesOnResponse,
+  setLoginTypeCookie,
   setProfileCompletedCookie,
   setSessionIdCookie,
 } from "@/lib/authCookies";
 import { buildClientHeaders } from "@/lib/clientMeta";
 import { extractSessionId } from "@/lib/userSession";
+// TEMP: backend migration (VM -> Cloud Run) — remove after cutover
+import { getBackendUrl } from "@/lib/backendUrl";
 
-const BACKEND = process.env.BACKEND_URL;
+// const BACKEND = process.env.BACKEND_URL;  // TEMP: backend migration (VM -> Cloud Run) — remove after cutover (restore this line; BACKEND is now resolved at request time inside POST)
 
 // NextRequest (not Request) so `req.cookies` exposes the device id the proxy
 // minted; the browser's User-Agent / forwarded IP come off `req.headers`.
 export async function POST(req: NextRequest) {
   try {
+    // TEMP: backend migration (VM -> Cloud Run) — remove after cutover
+    const BACKEND = await getBackendUrl();
     const body = await req.json();
     const clientHeaders = buildClientHeaders(req.cookies, req.headers);
 
@@ -113,6 +118,11 @@ export async function POST(req: NextRequest) {
         refresh: data.data.refresh_token,
         expiresIn: data?.data?.expires_in,
         refreshExpiresIn: data?.data?.refresh_expires_in,
+        sessionOnly: !profileCompleted,
+      });
+
+      setLoginTypeCookie(res.cookies, "system", {
+        maxAge: data?.data?.refresh_expires_in,
         sessionOnly: !profileCompleted,
       });
 

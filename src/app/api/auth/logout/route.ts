@@ -3,12 +3,15 @@ import type { NextRequest } from "next/server";
 import {
   ACCESS_COOKIE,
   SESSION_ID_COOKIE,
+  clearLoginTypeCookie,
   clearProfileCompletedCookie,
   clearSessionIdCookie,
 } from "@/lib/authCookies";
 import { buildClientHeaders } from "@/lib/clientMeta";
+// TEMP: backend migration (VM -> Cloud Run) — remove after cutover
+import { getBackendUrl } from "@/lib/backendUrl";
 
-const BACKEND = process.env.BACKEND_URL;
+// const BACKEND = process.env.BACKEND_URL;  // TEMP: backend migration (VM -> Cloud Run) — remove after cutover (restore this line; BACKEND is now resolved at request time inside POST)
 
 // NextRequest (not Request) so the httpOnly access / session-id cookies and the
 // device-id cookie are readable for the backend call below.
@@ -22,6 +25,8 @@ export async function POST(req: NextRequest) {
 
   if (access) {
     try {
+      // TEMP: backend migration (VM -> Cloud Run) — remove after cutover
+      const BACKEND = await getBackendUrl();
       const clientHeaders = buildClientHeaders(req.cookies, req.headers);
       await fetch(`${BACKEND}/api/web/auth/logout`, {
         method: "POST",
@@ -74,6 +79,9 @@ export async function POST(req: NextRequest) {
   // would be the worse of the two — the NEXT login would inherit it and
   // heartbeat onto the old row.
   clearSessionIdCookie(res.cookies);
+
+  // Same reasoning: the next login must record its own type.
+  clearLoginTypeCookie(res.cookies);
 
   return res;
 }

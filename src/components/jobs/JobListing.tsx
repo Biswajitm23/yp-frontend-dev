@@ -12,6 +12,7 @@ import {
   Bookmark,
   Star,
   CircleCheck,
+  Sparkles,
   LoaderCircle,
   X
 } from 'lucide-react'
@@ -31,6 +32,7 @@ import {
   fetchJobs,
   fetchRecomendedJobs,
   fetchSavedJobs,
+  fetchFeaturedJobs,
   fetchAppliedJobs,
   saveJob,
   unsaveJob,
@@ -71,7 +73,7 @@ import { useListingPreserve } from '@/app/hooks/useListingPreserve'
 import { useListingState } from '@/app/hooks/useListingState'
 import { useTheme } from '@/context/ThemeContext'
 
-type TabType = 'all' | 'saved' | 'recommended' | 'latest'
+type TabType = 'all' | 'featured' | 'saved' | 'recommended' | 'latest'
 
 // Return the job's short_description as a tidy single-paragraph snippet (strips
 // any HTML from a rich-text field). Returns null when absent so the card can
@@ -103,6 +105,13 @@ const TabIcon = ({
     {...(active && knockout ? { stroke: knockout } : {})}
   />
 )
+
+// `is_featured` arrives as a boolean today; also accept 1 / "1" / "true" so a
+// string "0" from the backend can't light up the strip by being truthy.
+const isFeaturedJob = (job: any): boolean =>
+  job?.is_featured === true ||
+  job?.is_featured == 1 ||
+  job?.is_featured === 'true'
 
 const getJobShortDescription = (job: any): string | null => {
   const raw = job?.short_description
@@ -209,7 +218,7 @@ const JobListing = () => {
     page?.data?.total_count ?? page?.total_count ?? 0
 
   /* ---------------- USER PROFILE ---------------- */
-  const { data: userProfile, isLoading: userProfileLoading } = useUserProfile()
+  const { data: userProfile } = useUserProfile()
 
   const getQueryKey = useCallback(() => {
     const currentTab = showAppliedJobs ? 'applied' : activeTab
@@ -271,6 +280,28 @@ const JobListing = () => {
   const arrayToCommaSeparatedString = (arr: string[]): string | undefined => {
     if (!arr || arr.length === 0) return undefined
     return arr.join(', ')
+  }
+
+  // Keep the bookmark state of the Featured tab in step with save / unsave.
+  // Featured pages use the same unwrapped shape as Saved / Applied, so read
+  // `result` tolerant to both nestings.
+  const setFeaturedSavedFlag = (jobId: string, saved: 0 | 1) => {
+    queryClient.setQueryData(['featured-jobs'], (old: any) => {
+      if (!old?.pages) return old
+      return {
+        ...old,
+        pages: old.pages.map((page: any) => {
+          const source = page?.data?.result ?? page?.result
+          if (!source) return page
+          const mapped = source.map((job: any) =>
+            job.id === jobId ? { ...job, saved_jobs: saved } : job
+          )
+          return page?.data?.result
+            ? { ...page, data: { ...page.data, result: mapped } }
+            : { ...page, result: mapped }
+        })
+      }
+    })
   }
 
   /* ---------------- SAVE JOB MUTATION WITH OPTIMISTIC UPDATE ---------------- */
@@ -371,6 +402,8 @@ const JobListing = () => {
         return { ...old, pages: newPages }
       })
 
+      setFeaturedSavedFlag(jobId, 1)
+
       queryClient.setQueryData(['applied-jobs'], (old: any) => {
         if (!old?.pages) return old
         return {
@@ -440,6 +473,8 @@ const JobListing = () => {
         })
         return { ...old, pages: newPages }
       })
+
+      setFeaturedSavedFlag(jobId, 0)
 
       queryClient.setQueryData(['applied-jobs'], (old: any) => {
         if (!old?.pages) return old
@@ -528,6 +563,8 @@ const JobListing = () => {
         return { ...old, pages: newPages }
       })
 
+      setFeaturedSavedFlag(jobId, 0)
+
       queryClient.setQueryData(['applied-jobs'], (old: any) => {
         if (!old?.pages) return old
         return {
@@ -597,6 +634,8 @@ const JobListing = () => {
         })
         return { ...old, pages: newPages }
       })
+
+      setFeaturedSavedFlag(jobId, 1)
 
       queryClient.setQueryData(['applied-jobs'], (old: any) => {
         if (!old?.pages) return old
@@ -933,6 +972,28 @@ const JobListing = () => {
     initialPageParam: 1
   })
 
+  /* ---------------- FEATURED JOBS WITH INFINITE SCROLL ---------------- */
+  const {
+    data: featuredData,
+    isLoading: featuredLoading,
+    hasNextPage: featuredHasNextPage,
+    fetchNextPage: featuredFetchNextPage,
+    isFetchingNextPage: featuredIsFetchingNextPage
+  } = useInfiniteQuery({
+    queryKey: ['featured-jobs'],
+    // The featured endpoint rejects anonymous calls — same gating as Saved.
+    enabled: hasSession === true,
+    queryFn: ({ pageParam = 1 }) =>
+      fetchFeaturedJobs({ limit: 10, page: pageParam }),
+    getNextPageParam: (lastPage, allPages) => {
+      const currentPage = allPages.length
+      const totalCount = pageTotalCount(lastPage)
+      const totalPages = Math.ceil(totalCount / 10)
+      return currentPage < totalPages ? currentPage + 1 : undefined
+    },
+    initialPageParam: 1
+  })
+
   /* ---------------- SAVED JOBS WITH INFINITE SCROLL ---------------- */
   const {
     data: savedData,
@@ -1001,6 +1062,12 @@ const JobListing = () => {
     ) {
       recommendedFetchNextPage()
     } else if (
+      currentTab === 'featured' &&
+      featuredHasNextPage &&
+      !featuredIsFetchingNextPage
+    ) {
+      featuredFetchNextPage()
+    } else if (
       currentTab === 'saved' &&
       savedHasNextPage &&
       !savedIsFetchingNextPage
@@ -1020,6 +1087,9 @@ const JobListing = () => {
     recommendedHasNextPage,
     recommendedIsFetchingNextPage,
     recommendedFetchNextPage,
+    featuredHasNextPage,
+    featuredIsFetchingNextPage,
+    featuredFetchNextPage,
     savedHasNextPage,
     savedIsFetchingNextPage,
     savedFetchNextPage,
@@ -1081,6 +1151,12 @@ const JobListing = () => {
           ) {
             recommendedFetchNextPage()
           } else if (
+            activeTab === 'featured' &&
+            featuredHasNextPage &&
+            !featuredIsFetchingNextPage
+          ) {
+            featuredFetchNextPage()
+          } else if (
             activeTab === 'saved' &&
             savedHasNextPage &&
             !savedIsFetchingNextPage
@@ -1113,10 +1189,12 @@ const JobListing = () => {
     activeTab,
     hasNextPage,
     recommendedHasNextPage,
+    featuredHasNextPage,
     savedHasNextPage,
     appliedHasNextPage,
     fetchNextPage,
     recommendedFetchNextPage,
+    featuredFetchNextPage,
     savedFetchNextPage,
     appliedFetchNextPage
   ])
@@ -1126,6 +1204,8 @@ const JobListing = () => {
   // 'latest' isn't backed by its own query yet — fall back to allJobs.
   const getActivePagesCount = useCallback(() => {
     switch (activeTab) {
+      case 'featured':
+        return featuredData?.pages?.length ?? 0
       case 'saved':
         return savedData?.pages?.length ?? 0
       case 'recommended':
@@ -1136,7 +1216,7 @@ const JobListing = () => {
       default:
         return jobsData?.pages?.length ?? 0
     }
-  }, [activeTab, jobsData, savedData, recommendedData])
+  }, [activeTab, jobsData, featuredData, savedData, recommendedData])
 
   // CV gate now lives on the Job Details page (where applying happens). The
   // modal is kept mounted but is no longer triggered from the listing.
@@ -1228,6 +1308,18 @@ const JobListing = () => {
     )
   }, [allRecommendedJobs, clientSearchInput, selectedFilters])
 
+  const allFeaturedJobs =
+    featuredData?.pages.flatMap(page => pageResult(page)) || []
+  const totalFeaturedJobs = pageTotalCount(featuredData?.pages[0])
+
+  const filteredFeaturedJobs = useMemo(() => {
+    return filterJobsClientSide(
+      allFeaturedJobs,
+      clientSearchInput,
+      selectedFilters
+    )
+  }, [allFeaturedJobs, clientSearchInput, selectedFilters])
+
   const allSavedJobs =
     savedData?.pages.flatMap(page => pageResult(page)) || []
   const totalSavedJobs = pageTotalCount(savedData?.pages[0])
@@ -1283,6 +1375,7 @@ const JobListing = () => {
   const isLoadingMainContent =
     (activeTab === 'all' && jobsLoading) ||
     (activeTab === 'recommended' && recommendedLoading) ||
+    (activeTab === 'featured' && featuredLoading) ||
     (activeTab === 'saved' && savedLoading) ||
     (showAppliedJobs && appliedLoading)
 
@@ -1292,23 +1385,26 @@ const JobListing = () => {
     ? allJobs
     : activeTab === 'recommended'
     ? filteredRecommendedJobs
+    : activeTab === 'featured'
+    ? filteredFeaturedJobs
     : activeTab === 'saved'
     ? filteredSavedJobs
     : []
 
-  // Client-side sort for non-'all' tabs ('all' is server-sorted by API).
+  // Client-side sort, only when the user picks a non-default sort on a
+  // non-'all' tab. 'all' is server-sorted (sort_by is sent to the API), and
+  // the default "Recently added" keeps the API's order on every tab — the API
+  // ranks featured jobs first, and re-sorting by created_at here used to mix
+  // them in with normal jobs and reshuffle cards as infinite-scroll pages
+  // arrived.
   const currentJobs = React.useMemo(() => {
     const list = Array.isArray(rawCurrentJobs) ? [...rawCurrentJobs] : []
+    const isServerSorted = activeTab === 'all' && !showAppliedJobs
+    if (isServerSorted) return list
     if (sortBy === 'a_to_z') {
       list.sort((a: any, b: any) => (a.title || '').localeCompare(b.title || ''))
     } else if (sortBy === 'z_to_a') {
       list.sort((a: any, b: any) => (b.title || '').localeCompare(a.title || ''))
-    } else if (sortBy === 'recently_added') {
-      list.sort((a: any, b: any) => {
-        const ad = new Date(a.created_at || 0).getTime()
-        const bd = new Date(b.created_at || 0).getTime()
-        return bd - ad
-      })
     }
     return list
   }, [rawCurrentJobs, sortBy, activeTab, showAppliedJobs])
@@ -1319,6 +1415,8 @@ const JobListing = () => {
     ? totalAllJobs
     : activeTab === 'recommended'
     ? totalRecommendedJobs
+    : activeTab === 'featured'
+    ? totalFeaturedJobs
     : activeTab === 'saved'
     ? totalSavedJobs
     : 0
@@ -1329,6 +1427,8 @@ const JobListing = () => {
     ? isFetchingNextPage
     : activeTab === 'recommended'
     ? recommendedIsFetchingNextPage
+    : activeTab === 'featured'
+    ? featuredIsFetchingNextPage
     : activeTab === 'saved'
     ? savedIsFetchingNextPage
     : false
@@ -1339,6 +1439,8 @@ const JobListing = () => {
     ? hasNextPage
     : activeTab === 'recommended'
     ? recommendedHasNextPage
+    : activeTab === 'featured'
+    ? featuredHasNextPage
     : activeTab === 'saved'
     ? savedHasNextPage
     : false
@@ -1500,9 +1602,10 @@ const JobListing = () => {
   }
 
   /* ---------------- SAFE EARLY RETURNS ---------------- */
-  if (userProfileLoading) {
-    return <div className='text-white'></div>
-  }
+  // No early return on the profile loading state: that flag depends on the
+  // client-only session check, so the server always rendered the full page
+  // while a late-hydrating client rendered an empty div → hydration mismatch.
+  // The list already shows its own skeletons while loading.
 
   // if (jobsError) {
   //   return <div className='text-white'>Failed to load jobs</div>
@@ -1565,6 +1668,29 @@ const JobListing = () => {
                       filled={activeTab === 'all' && !showAppliedJobs}
                     />
                     All Jobs ({sidebarAllJobsCount})
+                  </span>
+                </button>
+                <button
+                  onClick={() => handleTabChange('featured')}
+                  className={` ${styles.side_job_navigation_btn} ${
+                    activeTab === 'featured' && !showAppliedJobs
+                      ? styles.active
+                      : ''
+                  }`}
+                  style={
+                    isLight
+                      ? activeTab === 'featured' && !showAppliedJobs
+                        ? { fontWeight: 600, color: '#040F1F' }
+                        : { color: '#888888' }
+                      : undefined
+                  }
+                >
+                  <span className='inline-flex items-center gap-2'>
+                    <TabIcon
+                      icon={Sparkles}
+                      active={activeTab === 'featured' && !showAppliedJobs}
+                    />
+                    Featured ({totalFeaturedJobs})
                   </span>
                 </button>
                  <button
@@ -1812,6 +1938,9 @@ const JobListing = () => {
                       {showAppliedJobs && `Applied Jobs `}
                       {!showAppliedJobs && activeTab === 'all' && `All Jobs `}
                       {!showAppliedJobs &&
+                        activeTab === 'featured' &&
+                        `Featured Jobs `}
+                      {!showAppliedJobs &&
                         activeTab === 'saved' &&
                         `Saved Jobs `}
                       {!showAppliedJobs &&
@@ -2012,13 +2141,21 @@ const JobListing = () => {
                       currentJobs.map((job: any, index: number) => (
                         <div
                           key={job.id}
-                          className={`${styles.jobListing_job_item} ${styles.jobListing_job_item_animated} card-hover`}
+                          className={`${styles.jobListing_job_item} ${styles.jobListing_job_item_animated} ${
+                            isFeaturedJob(job) ? styles.jobListing_job_item_featured : ''
+                          } card-hover`}
                           onClick={() => navigateToJob(job.id)}
                           style={{
                             cursor: 'pointer',
                             animationDelay: `${Math.min(index, 12) * 55}ms`,
                           }}
                         >
+                          {isFeaturedJob(job) ? (
+                            <span className={styles.jobListing_featured_strip}>
+                              <Sparkles aria-hidden='true' />
+                              Featured
+                            </span>
+                          ) : null}
                           <div className={styles.jobListing_card_main}>
                             {/* Row 1: circle logo | title + company | save */}
                             <div className={styles.jobListing_job_item_header}>
@@ -2258,6 +2395,7 @@ const JobListing = () => {
                     )}
                      {((activeTab === 'all' && hasNextPage) ||
                     (activeTab === 'recommended' && recommendedHasNextPage) ||
+                    (activeTab === 'featured' && featuredHasNextPage) ||
                     (activeTab === 'saved' && savedHasNextPage) ||
                     (showAppliedJobs && appliedHasNextPage)) && (
                     <div ref={observerTarget} className='flex justify-center h-[1px]'>

@@ -378,6 +378,52 @@
   z-index: 2;
 }
 
+/* Featured job card: a gold corner strip pinned to the card's top-left edge.
+   The card gets extra top padding so the strip never overlaps the logo. */
+.jobListing_job_item.jobListing_job_item_featured {
+  padding-top: 38px;
+}
+
+.jobListing_job_item.jobListing_job_item_featured:not(:hover) {
+  border-color: #f5b94280;
+}
+
+.jobListing_featured_strip {
+  position: absolute;
+  top: -1px;
+  left: -1px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 12px 5px 10px;
+  border-radius: 16px 0 12px 0;
+  background: linear-gradient(90deg, #f5b942 0%, #f08c2b 100%);
+  color: #1a1203;
+  font-family: var(--font-plus-jakarta);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  line-height: 1;
+  text-transform: uppercase;
+  pointer-events: none;
+  box-shadow: 0 2px 8px rgba(240, 140, 43, 0.35);
+}
+
+.jobListing_featured_strip svg {
+  width: 13px;
+  height: 13px;
+  flex: none;
+}
+
+:global(:root:not(.dark)) .jobListing_job_item.jobListing_job_item_featured:not(:hover) {
+  border-color: #f0b54a;
+}
+
+:global(:root:not(.dark)) .jobListing_featured_strip {
+  color: #2a1a00;
+  box-shadow: 0 2px 8px rgba(240, 140, 43, 0.25);
+}
+
 /* Recommended-sidebar variant: the sidebar cards sit inside `overflow-y: auto`
    scroll areas, so the default `scale(1.02)` hover above gets clipped at the
    container edges. Override it with a vertical lift + soft shadow (no scale, so

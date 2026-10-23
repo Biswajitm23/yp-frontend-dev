@@ -34,8 +34,10 @@ export default function RecommendedInfoTooltip({
         </div>
       }
     >
-      <button
-        type="button"
+      {/* A span, not a <button>: this ⓘ sits inside the Recommended tab
+          <button>, and nested buttons are invalid HTML (hydration error). */}
+      <span
+        role="button"
         tabIndex={0}
         aria-label="What does Recommended mean?"
         // The parent header/tab is itself clickable — keep the ⓘ from
@@ -44,10 +46,16 @@ export default function RecommendedInfoTooltip({
           e.preventDefault();
           e.stopPropagation();
         }}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            e.stopPropagation();
+          }
+        }}
         className="flex items-center text-gray-400 hover:text-white shrink-0 info-button cursor-pointer"
       >
         <Info size={size} />
-      </button>
+      </span>
     </Tooltip>
   );
 }

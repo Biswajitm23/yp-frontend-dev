@@ -6,6 +6,7 @@ import { useQuery } from '@tanstack/react-query'
 import { useTheme } from '@/context/ThemeContext'
 import { ensureValidToken } from '@/lib/tokenManager'
 import { getBookingDetail } from '@/services/events.services'
+import { isUnauthenticatedError } from '@/lib/authError'
 import ArrowBackIcon from '@mui/icons-material/ArrowBack'
 import CalendarTodayOutlinedIcon from '@mui/icons-material/CalendarTodayOutlined'
 import AccessTimeIcon from '@mui/icons-material/AccessTime'
@@ -109,6 +110,7 @@ export default function BookingDetailLayout({ bookingId }: Props) {
     data: bookingResponse,
     isLoading,
     isError,
+    error,
   } = useQuery({
     queryKey: ['booking-detail', bookingId],
     queryFn: async () => {
@@ -166,7 +168,11 @@ export default function BookingDetailLayout({ bookingId }: Props) {
         {(isError || (!isLoading && !booking)) && (
           <div className={styles.event_details_error}>
             <p style={{ color: isLight ? '#555' : '#a0aec0' }}>
-              {isError ? 'Failed to load booking details.' : 'Booking not found.'}
+              {isError
+                ? isUnauthenticatedError(error)
+                  ? 'Please log in to your account to view your booking details.'
+                  : 'Failed to load booking details.'
+                : 'Booking not found.'}
             </p>
             <button
               onClick={() => router.push('/events')}
@@ -191,6 +197,18 @@ export default function BookingDetailLayout({ bookingId }: Props) {
           })
           const provisionalStatus = mapToProvisionalStatus(booking.booking_status)
           const provisionalDisplay = getProvisionalStatusDisplay(provisionalStatus)
+          // Which status message box to show under "Applied At" (matches the
+          // app). SurveyMonkey events use the provisional mapping; other free
+          // bookings map their raw booking_status. Paid bookings show none.
+          const messageStatus: string | null = isSurveyMonkey
+            ? provisionalStatus
+            : isFreeBooking
+            ? ({
+                confirmed: 'confirmed',
+                pending: 'registration_started',
+                cancelled: 'not_selected',
+              } as Record<string, string>)[booking.booking_status] ?? null
+            : null
 
           return (
             <div style={{ maxWidth: 640, margin: '0 auto' }}>
@@ -461,7 +479,7 @@ export default function BookingDetailLayout({ bookingId }: Props) {
                     )}
                   </div>
 
-                  {isSurveyMonkey && (provisionalStatus === 'registration_started' || provisionalStatus === 'conditional_place') && (
+                  {(messageStatus === 'registration_started' || messageStatus === 'conditional_place') && (
                     <div
                       style={{
                         display: 'flex',
@@ -494,14 +512,14 @@ export default function BookingDetailLayout({ bookingId }: Props) {
                           fontFamily: "'DM Sans', sans-serif",
                         }}
                       >
-                        This is a provisional registration. Please complete the Survey form
-                        to be considered for a place. Young Professionals will email you separately
-                        if your place is confirmed.
+                        {isSurveyMonkey
+                          ? 'This is a provisional registration. Please complete the Survey form to be considered for a place. Young Professionals will email you separately if your place is confirmed.'
+                          : 'This is a provisional registration. Please complete the online form to be considered for a place. We will email you separately if your place is confirmed.'}
                       </p>
                     </div>
                   )}
 
-                  {isSurveyMonkey && provisionalStatus === 'confirmed' && (
+                  {messageStatus === 'confirmed' && (
                     <div
                       style={{
                         display: 'flex',
@@ -538,7 +556,7 @@ export default function BookingDetailLayout({ bookingId }: Props) {
                     </div>
                   )}
 
-                  {isSurveyMonkey && provisionalStatus === 'not_selected' && (
+                  {messageStatus === 'not_selected' && (
                     <div
                       style={{
                         display: 'flex',
@@ -571,7 +589,7 @@ export default function BookingDetailLayout({ bookingId }: Props) {
                           fontFamily: "'DM Sans', sans-serif",
                         }}
                       >
-                        You were not selected for this event by Young Professionals. We encourage
+                        You were not selected for this event. We encourage
                         you to apply for upcoming opportunities.
                       </p>
                     </div>
@@ -591,9 +609,9 @@ export default function BookingDetailLayout({ bookingId }: Props) {
                           width: '100%',
                           textDecoration: 'none',
                         }}
-                        aria-label='Complete Survey Monkey  Form'
+                        aria-label='Complete the online form'
                       >
-                        Complete Survey Monkey  Form
+                        Complete the online form
                       </a>
                     </div>
                   )}

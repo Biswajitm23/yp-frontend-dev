@@ -1,5 +1,3 @@
-import { formatDistanceToNowStrict } from "date-fns";
-
 export function formateDOBDate(dateStr: string) {
   const [day, month, year] = dateStr.split("-").map(Number);
   const pad = (n: number) => String(n).padStart(2, "0");
@@ -35,6 +33,16 @@ export function formatTimeOnly(
   });
 }
 
+// Relative "time ago" string, matching the mobile app 1:1.
+// Output: "now" | "Xm" | "Xh" | "Xd" | "Xw" (1–4) | "Xmo" (min 1)
+//   < 1 min   → "now"
+//   < 60 min  → "Xm"
+//   < 24 hrs  → "Xh"
+//   < 7 days  → "Xd"
+//   < 30 days → "Xw"  (7–29 days, so 28–29 days reads "4w", never "0mo")
+//   30+ days  → "Xmo"
+// Expects the backend UTC ISO string (with trailing Z) — used as-is; new Date()
+// handles the UTC→epoch conversion so the diff is timezone-correct everywhere.
 export const timeAgo = (dateString: string | Date): string => {
   if (!dateString) return "";
 
@@ -43,15 +51,20 @@ export const timeAgo = (dateString: string | Date): string => {
 
   if (isNaN(date.getTime())) return "";
 
-  const secondsDiff = Math.floor(
-    (Date.now() - date.getTime()) / 1000
-  );
+  const diffMs = Date.now() - date.getTime();
+  const diffMin = Math.floor(diffMs / 60000);
 
-  if (secondsDiff < 10) return "Just now";
+  if (diffMin < 1) return "now";
+  if (diffMin < 60) return `${diffMin}m`;
 
-  return formatDistanceToNowStrict(date, {
-    addSuffix: true,
-  });
+  const diffHrs = Math.floor(diffMin / 60);
+  if (diffHrs < 24) return `${diffHrs}h`;
+
+  const diffDays = Math.floor(diffHrs / 24);
+  if (diffDays < 7) return `${diffDays}d`;
+
+  if (diffDays < 30) return `${Math.floor(diffDays / 7)}w`;
+  return `${Math.max(1, Math.floor(diffDays / 30))}mo`;
 };
 
 // Abbreviated time-ago for job listings — matches mobile app format

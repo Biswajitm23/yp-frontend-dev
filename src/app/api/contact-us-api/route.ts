@@ -1,9 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
+// TEMP: backend migration (VM -> Cloud Run) — remove after cutover
+import { getBackendUrl } from "@/lib/backendUrl";
 
-const BACKEND_URL = process.env.BACKEND_URL!;
+// const BACKEND_URL = process.env.BACKEND_URL!;  // TEMP: backend migration (VM -> Cloud Run) — remove after cutover (restore this line; BACKEND_URL is now resolved at request time inside POST)
 
 export async function POST(req: NextRequest) {
   try {
+    // TEMP: backend migration (VM -> Cloud Run) — remove after cutover
+    const BACKEND_URL = await getBackendUrl();
     const payload = await req.json().catch(() => ({}));
 
     // Validate required fields

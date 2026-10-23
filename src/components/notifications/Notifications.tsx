@@ -700,6 +700,28 @@ const Notifications = () => {
         </div>
       );
     }
+    if (
+      notification.details_type === "booking_cancelled" ||
+      notification.details_type === "booking_canceled" ||
+      /booking\s*cancell?ed/i.test(notification.title || "")
+    ) {
+      return (
+        <div
+          style={{
+            width: 80,
+            height: 80,
+            borderRadius: "10px",
+            background: "linear-gradient(135deg, #20BDFF 0%, #5B7CFF 100%)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            boxShadow: "0 4px 12px rgba(32, 189, 255, 0.35)",
+          }}
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="40px" height="40px" viewBox="0 0 24 24"><path fill="#FFF" d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10s10-4.5 10-10S17.5 2 12 2m3.59 13.59L12 13.41l-3.59 3.59L7 15.59L10.59 12L7 8.41L8.41 7L12 10.59L15.59 7L17 8.41L13.41 12L17 15.59z"></path></svg>
+        </div>
+      );
+    }
     switch (notification.type) {
       case "job":
         return (
@@ -732,8 +754,8 @@ const Notifications = () => {
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              width="28"
-              height="28"
+              width="38px"
+              height="38px"
               viewBox="0 0 24 24"
               aria-hidden="true"
             >

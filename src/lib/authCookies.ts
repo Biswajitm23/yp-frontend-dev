@@ -26,6 +26,14 @@ export const PROFILE_COMPLETED_COOKIE = "profile_completed" as const;
  * and cannot forge one.
  */
 export const SESSION_ID_COOKIE = "yp_session_id" as const;
+/**
+ * How the current login was made: "system" (email/phone + password) or
+ * "social" (Google / LinkedIn / Apple). Client-readable on purpose — it only
+ * drives UI (e.g. whether Change Password asks for the current password); the
+ * backend remains the authority on what a request must contain.
+ */
+export const LOGIN_TYPE_COOKIE = "login_type" as const;
+export type LoginType = "system" | "social";
 
 /** ~80 years — only for the COMPLETED state, which must survive a browser restart. */
 const PROFILE_COMPLETED_MAX_AGE = 1000 * 60 * 60 * 24 * 365 * 80;
@@ -263,6 +271,33 @@ export function setSessionIdCookie(
   });
 }
 
+/**
+ * Write `login_type`. Same lifetime rules as `yp_session_id`: it describes one
+ * login, so it must not outlive the tokens that login was issued.
+ */
+export function setLoginTypeCookie(
+  store: CookieStore,
+  loginType: LoginType,
+  opts: { maxAge?: number; sessionOnly?: boolean } = {},
+): void {
+  const { maxAge, sessionOnly } = opts;
+  const resolved =
+    typeof maxAge === "number" && Number.isFinite(maxAge) && maxAge > 0
+      ? Math.floor(maxAge)
+      : DEFAULT_REFRESH_MAX_AGE;
+
+  store.set(LOGIN_TYPE_COOKIE, loginType, {
+    ...baseOptions(),
+    httpOnly: false,
+    ...(sessionOnly ? {} : { maxAge: resolved }),
+  });
+}
+
+/** Remove `login_type` (logout / dead session). */
+export function clearLoginTypeCookie(store: CookieStore): void {
+  store.delete(LOGIN_TYPE_COOKIE);
+}
+
 /** Remove `yp_session_id` (logout / dead session). */
 export function clearSessionIdCookie(store: CookieStore): void {
   store.delete(SESSION_ID_COOKIE);
@@ -293,4 +328,5 @@ export function clearAuthCookies(store: CookieStore): void {
   // than at each call site so no teardown path can forget it and leave the next
   // login writing heartbeats onto a dead row.
   store.delete(SESSION_ID_COOKIE);
+  store.delete(LOGIN_TYPE_COOKIE);
 }

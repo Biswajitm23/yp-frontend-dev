@@ -4,7 +4,15 @@ import { signIn } from "next-auth/react";
 import { useState, useEffect, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import { readCallbackUrl } from "@/lib/callbackUrl";
-export default function SignInLinkedin() {
+import {
+  writeSocialAuthIntent,
+  type SocialAuthIntent,
+} from "@/lib/socialAuthIntent";
+export default function SignInLinkedin({
+  mode = "signup",
+}: {
+  mode?: SocialAuthIntent;
+}) {
   const [isLoading, setIsLoading] = useState(false);
   const timeoutRef = useRef<number | null>(null);
   const searchParams = useSearchParams();
@@ -38,7 +46,10 @@ export default function SignInLinkedin() {
   const handleClick = async () => {
     try {
       setIsLoading(true);
-      
+
+      // Tells the signIn callback whether it may create an account
+      writeSocialAuthIntent(mode);
+
       // Sign in and redirect to the deep-link the user originally tried to
       // reach if one was preserved, otherwise fall through to the dashboard.
       await signIn("linkedin", {

@@ -30,8 +30,10 @@ import {
   type ReadableCookieStore as ClientMetaCookieStore,
   type ReadableHeaders,
 } from "@/lib/clientMeta";
+// TEMP: backend migration (VM -> Cloud Run) — remove after cutover
+import { getBackendUrl } from "@/lib/backendUrl";
 
-const BASE = process.env.BACKEND_URL!; // server-only; never NEXT_PUBLIC_*
+// const BASE = process.env.BACKEND_URL!; // server-only; never NEXT_PUBLIC_*  // TEMP: backend migration (VM -> Cloud Run) — remove after cutover (restore this line; BASE is now resolved at call time via getBackendUrl())
 
 // Backend refresh contract — mirrors src/app/api/auth/refresh/route.ts:
 //   POST ${BACKEND}/api/mobile/auth/token/refresh  body { refresh_token }
@@ -148,6 +150,9 @@ async function refreshInline(
   }).get("refresh")?.value;
   if (!refreshToken) return null;
 
+  // TEMP: backend migration (VM -> Cloud Run) — remove after cutover
+  const BASE = await getBackendUrl();
+
   let res: Response;
   try {
     res = await fetchWithTimeout(
@@ -204,6 +209,8 @@ async function call<T>(
 ): Promise<ApiResult<T>> {
   const jar = (await cookies()) as unknown as CookieStore;
   const clientHeaders = await clientMetaHeaders(jar);
+  // TEMP: backend migration (VM -> Cloud Run) — remove after cutover
+  const BASE = await getBackendUrl();
   let token = (jar as unknown as {
     get(name: string): { value: string } | undefined;
   }).get("access")?.value;

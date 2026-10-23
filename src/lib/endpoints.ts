@@ -41,6 +41,8 @@ export const EP = {
   savedJobs: "/api/mobile/user/saved-jobs",
   // Public (soft-auth) recommendations — works for logged-out visitors too.
   recommendedJobs: "/api/web/user/recommended-jobs",
+  // Featured jobs list (Jobs page "Featured" tab). Rejects anonymous calls.
+  featuredJobs: "/api/web/user/featured-jobs",
   appliedJob: "/api/mobile/user/applied-jobs",
   appliedJobsList: "/api/mobile/user/applied-jobs-list",
   followCompany: "/api/mobile/company/follow",

@@ -3,11 +3,21 @@ import Google from "next-auth/providers/google";
 import LinkedIn from "next-auth/providers/linkedin";
 import Apple from "next-auth/providers/apple"
 import { cookies, headers } from "next/headers";
-import { setAuthCookies, setSessionIdCookie } from "@/lib/authCookies";
+import {
+  setAuthCookies,
+  setLoginTypeCookie,
+  setSessionIdCookie,
+} from "@/lib/authCookies";
 import { buildClientHeaders } from "@/lib/clientMeta";
 import { extractSessionId } from "@/lib/userSession";
+import {
+  SOCIAL_AUTH_INTENT_COOKIE,
+  SOCIAL_NO_ACCOUNT_REASON,
+} from "@/lib/socialAuthIntent";
+// TEMP: backend migration (VM -> Cloud Run) — remove after cutover
+import { getBackendUrl } from "@/lib/backendUrl";
 
-const BACKEND = process.env.BACKEND_URL;
+// const BACKEND = process.env.BACKEND_URL;  // TEMP: backend migration (VM -> Cloud Run) — remove after cutover (restore this line; BACKEND is now resolved at request time inside the signIn callback below)
 
 /** Non-auth client-readable cookie attributes (theme_settings). secure-in-prod. */
 const clientCookieConfig = {
@@ -28,6 +38,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           return false;
         }
         
+        // TEMP: backend migration (VM -> Cloud Run) — remove after cutover
+        const BACKEND = await getBackendUrl();
+
         // Client identity for every backend call below. The social flow never
         // passes through src/lib/api.ts, so without this the entire
         // Google/LinkedIn/Apple path would report no device and stamp THIS
@@ -37,7 +50,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           await headers(),
         );
 
-        const authType = 'social';
+        const authType = 'social' as const;
         const authIdentifier = 'email';
 
         const first_name = user?.name?.split(" ")[0] || "";
@@ -86,6 +99,11 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             profileCompleted: isProfileComplete,
           });
 
+          setLoginTypeCookie(cookieStore, authType, {
+            maxAge: storeLoginData?.refresh_expires_in,
+            sessionOnly: !isProfileComplete,
+          });
+
           // Social LOGIN issued tokens, so the backend opened a UserSession for
           // it. `is_signup` is the backend's call here for a reason: this
           // callback signs up and logs in back-to-back, so only the backend
@@ -127,8 +145,29 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           return true;
         }
 
+        // Which tab the social button was pressed on (see socialAuthIntent.ts).
+        // One-shot: read it, then drop it so it can't leak into a later attempt.
+        const intentJar = await cookies();
+        const isLoginIntent =
+          intentJar.get(SOCIAL_AUTH_INTENT_COOKIE)?.value === "login";
+        intentJar.delete(SOCIAL_AUTH_INTENT_COOKIE);
+
+        // A LOGIN must never create an account. Accounts are matched by email
+        // only, so an unknown email here is usually someone who changed their
+        // account email — signing them up would hand them a second, blank
+        // account. Send them back to the login form with an explanation.
+        const accountNotFound =
+          loginRes.status === 404 ||
+          /not\s*found/i.test(String(loginData?.message ?? ""));
+        if (isLoginIntent && accountNotFound) {
+          return `/auth?tab=login&reason=${SOCIAL_NO_ACCOUNT_REASON}`;
+        }
+
         // If user doesn't exist, try to signup
-        if (loginRes.status === 404 || loginData?.status === "ERROR") {
+        if (
+          !isLoginIntent &&
+          (loginRes.status === 404 || loginData?.status === "ERROR")
+        ) {
           const signupRes = await fetch(`${BACKEND}/api/mobile/auth/signup`, {
             method: "POST",
             headers: { ...clientHeaders, "Content-Type": "application/json" },
@@ -189,6 +228,11 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
               expiresIn: storeLoginAfterSignupData?.expires_in,
               refreshExpiresIn: storeLoginAfterSignupData?.refresh_expires_in,
               profileCompleted: isProfileComplete,
+            });
+
+            setLoginTypeCookie(cookieStore, authType, {
+              maxAge: storeLoginAfterSignupData?.refresh_expires_in,
+              sessionOnly: !isProfileComplete,
             });
 
             // Social SIGNUP, then an immediate login that issued the tokens —

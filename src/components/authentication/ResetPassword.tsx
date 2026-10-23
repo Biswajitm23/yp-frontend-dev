@@ -178,6 +178,12 @@ export default function ResetPassword({
       const userId = searchParams.get("userId") || "";
       const response = await resetPassword(userId, otpValue, newPassword);
 
+      // The action reports a rejected reset (wrong/expired OTP, …) as a value;
+      // hand it to the catch below so it surfaces the backend's message.
+      if (response?.status === "ERROR") {
+        throw new Error(response.message);
+      }
+
       toast.success(response?.message || "Password reset successfully!");
       // Land on Login, not the Sign Up default — the user has just set a new
       // password and the next step is signing in with it.

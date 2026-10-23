@@ -9,9 +9,7 @@ import { ensureValidToken } from '@/lib/tokenManager'
 import { useAuthGate } from '@/app/hooks/useAuthGate'
 import { isUnauthenticatedError } from '@/lib/authError'
 import { createBooking } from '@/services/events.services'
-import Link from 'next/link'
 import RegistrationStartedModal from './RegistrationStartedModal'
-import { isSurveyMonkeyEvent } from '@/types/eventStatus'
 
 interface EventFreePaymentSectionProps {
   eventId: string
@@ -56,7 +54,18 @@ const EventFreePaymentSection = ({
   const [isRegistering, setIsRegistering] = useState(false)
   const [showStartedModal, setShowStartedModal] = useState(false)
 
-  const isSurveyMonkey = isSurveyMonkeyEvent(external_registration_url)
+  // Matches the app: ANY external registration link (SurveyMonkey, Zoom
+  // webinar, etc.) makes this a provisional "complete the online form" event.
+  // Previously only SurveyMonkey hosts counted, so e.g. Zoom-registration
+  // events showed a bare "Applied" link instead of the form CTA.
+  const isSurveyMonkey = !!external_registration_url
+  // Always open the form with a scheme — a bare "forms.example.com" would
+  // otherwise resolve as a relative path on this site.
+  const registrationUrl = external_registration_url
+    ? /^https?:\/\//i.test(external_registration_url)
+      ? external_registration_url
+      : `https://${external_registration_url}`
+    : null
 
   const activeBooking = optimisticBooking || user_booking
   const bookingStatusLower = (activeBooking?.booking_status || '').toLowerCase()
@@ -72,8 +81,8 @@ const EventFreePaymentSection = ({
   const isClosed = availability_status === 'registration_closed' || !is_registration_open
 
   const openSurveyForm = () => {
-    if (external_registration_url) {
-      window.open(external_registration_url, '_blank', 'noopener,noreferrer')
+    if (registrationUrl) {
+      window.open(registrationUrl, '_blank', 'noopener,noreferrer')
     }
   }
 
@@ -87,10 +96,9 @@ const EventFreePaymentSection = ({
         const bookingId = data.data.booking_id
         setOptimisticBooking({
           booking_id: bookingId,
-          // For SurveyMonkey events the user's place is provisional until
-          // Young Professionals manually approves and emails them. We never
-          // optimistically mark it confirmed.
-          booking_status: isSurveyMonkey ? 'registration_started' : 'confirmed',
+          // Free bookings are created as pending (awaiting admin approval) —
+          // never optimistically mark them confirmed.
+          booking_status: 'pending',
           num_seats: 1,
         })
         queryClient.invalidateQueries({ queryKey: ['event-details'] })
@@ -126,10 +134,7 @@ const EventFreePaymentSection = ({
         setIsRegistering(true)
         const ok = await submitBooking()
         if (ok) {
-          if (external_registration_url) {
-            window.open(external_registration_url, '_blank', 'noopener,noreferrer')
-          }
-          toast.success('Booking Successful')
+          toast.success('Registration started')
         }
         setIsRegistering(false)
       })()
@@ -152,8 +157,8 @@ const EventFreePaymentSection = ({
     <div
       className={styles.ed_payment_card}
       style={{
-        background: isLight ? '#ffffff' : 'rgba(2, 12, 25, 0.5)',
-        borderColor: isLight ? '#e2e8f0' : 'rgba(160, 174, 192, 0.3)',
+        background: isLight ? "#ffffff" : "rgba(2, 12, 25, 0.5)",
+        borderColor: isLight ? "#e2e8f0" : "rgba(160, 174, 192, 0.3)",
       }}
     >
       {/* Free Event Pricing Header */}
@@ -170,34 +175,42 @@ const EventFreePaymentSection = ({
       {isSurveyMonkey && hasActiveBooking && !isConfirmedBooking && (
         <div
           style={{
-            display: 'flex',
+            display: "flex",
             gap: 12,
-            padding: '14px 16px',
+            padding: "14px 16px",
             borderRadius: 12,
-            background: isLight ? '#FEF3C7' : 'rgba(245, 158, 11, 0.12)',
-            border: `1px solid ${isLight ? '#FDE68A' : 'rgba(245, 158, 11, 0.3)'}`,
-            margin: '16px 0',
+            background: isLight ? "#FEF3C7" : "rgba(245, 158, 11, 0.12)",
+            border: `1px solid ${isLight ? "#FDE68A" : "rgba(245, 158, 11, 0.3)"}`,
+            margin: "16px 0",
           }}
         >
           <svg
-            width='20'
-            height='20'
-            viewBox='0 0 24 24'
-            fill='none'
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
             style={{ flexShrink: 0, marginTop: 2 }}
-            aria-hidden='true'
+            aria-hidden="true"
           >
-            <circle cx='12' cy='12' r='10' stroke='#B45309' strokeWidth='1.8' />
-            <line x1='12' y1='8' x2='12' y2='13' stroke='#B45309' strokeWidth='1.8' strokeLinecap='round' />
-            <circle cx='12' cy='16.5' r='1.1' fill='#B45309' />
+            <circle cx="12" cy="12" r="10" stroke="#B45309" strokeWidth="1.8" />
+            <line
+              x1="12"
+              y1="8"
+              x2="12"
+              y2="13"
+              stroke="#B45309"
+              strokeWidth="1.8"
+              strokeLinecap="round"
+            />
+            <circle cx="12" cy="16.5" r="1.1" fill="#B45309" />
           </svg>
           <div>
             <p
               style={{
-                margin: '0 0 4px',
+                margin: "0 0 4px",
                 fontSize: 14,
                 fontWeight: 700,
-                color: isLight ? '#92400E' : '#FCD34D',
+                color: isLight ? "#92400E" : "#FCD34D",
                 fontFamily: "'Plus Jakarta Sans', sans-serif",
               }}
             >
@@ -208,11 +221,11 @@ const EventFreePaymentSection = ({
                 margin: 0,
                 fontSize: 13,
                 lineHeight: 1.55,
-                color: isLight ? '#92400E' : '#FCD34D',
+                color: isLight ? "#92400E" : "#FCD34D",
                 fontFamily: "'DM Sans', sans-serif",
               }}
             >
-              Please complete the Survey form and wait for an email from Young Professionals
+              Please complete the online form and wait for an email from us
               confirming your place.
             </p>
           </div>
@@ -223,36 +236,44 @@ const EventFreePaymentSection = ({
       {isSurveyMonkey && hasActiveBooking && isConfirmedBooking && (
         <div
           style={{
-            display: 'flex',
+            display: "flex",
             gap: 12,
-            padding: '14px 16px',
+            padding: "14px 16px",
             borderRadius: 12,
-            background: isLight ? 'rgba(34, 197, 94, 0.10)' : 'rgba(34, 197, 94, 0.12)',
-            border: `1px solid ${isLight ? 'rgba(34, 197, 94, 0.35)' : 'rgba(34, 197, 94, 0.35)'}`,
-            margin: '16px 0',
+            background: isLight
+              ? "rgba(34, 197, 94, 0.10)"
+              : "rgba(34, 197, 94, 0.12)",
+            border: `1px solid ${isLight ? "rgba(34, 197, 94, 0.35)" : "rgba(34, 197, 94, 0.35)"}`,
+            margin: "16px 0",
           }}
         >
           <svg
-            width='20'
-            height='20'
-            viewBox='0 0 24 24'
-            fill='none'
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
             style={{ flexShrink: 0, marginTop: 2 }}
-            aria-hidden='true'
+            aria-hidden="true"
           >
-            <circle cx='12' cy='12' r='10' stroke='#15803D' strokeWidth='1.8' />
-            <path d='M8 12.5l2.5 2.5 5-5' stroke='#15803D' strokeWidth='1.8' strokeLinecap='round' strokeLinejoin='round' />
+            <circle cx="12" cy="12" r="10" stroke="#15803D" strokeWidth="1.8" />
+            <path
+              d="M8 12.5l2.5 2.5 5-5"
+              stroke="#15803D"
+              strokeWidth="1.8"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
           </svg>
           <p
             style={{
               margin: 0,
               fontSize: 13,
               lineHeight: 1.55,
-              color: isLight ? '#15803D' : '#86EFAC',
+              color: isLight ? "#15803D" : "#86EFAC",
               fontFamily: "'DM Sans', sans-serif",
             }}
           >
-            Your place is confirmed by Young Professionals. Check your email for joining details.
+            You're all set - check your email for joining details.
           </p>
         </div>
       )}
@@ -261,38 +282,56 @@ const EventFreePaymentSection = ({
       {!!activeBooking && isCancelledBooking && (
         <div
           style={{
-            display: 'flex',
+            display: "flex",
             gap: 12,
-            padding: '14px 16px',
+            padding: "14px 16px",
             borderRadius: 12,
-            background: isLight ? 'rgba(239, 68, 68, 0.08)' : 'rgba(239, 68, 68, 0.12)',
-            border: `1px solid ${isLight ? 'rgba(239, 68, 68, 0.35)' : 'rgba(239, 68, 68, 0.35)'}`,
-            margin: '16px 0',
+            background: isLight
+              ? "rgba(239, 68, 68, 0.08)"
+              : "rgba(239, 68, 68, 0.12)",
+            border: `1px solid ${isLight ? "rgba(239, 68, 68, 0.35)" : "rgba(239, 68, 68, 0.35)"}`,
+            margin: "16px 0",
           }}
         >
           <svg
-            width='20'
-            height='20'
-            viewBox='0 0 24 24'
-            fill='none'
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
             style={{ flexShrink: 0, marginTop: 2 }}
-            aria-hidden='true'
+            aria-hidden="true"
           >
-            <circle cx='12' cy='12' r='10' stroke='#B91C1C' strokeWidth='1.8' />
-            <line x1='8.5' y1='8.5' x2='15.5' y2='15.5' stroke='#B91C1C' strokeWidth='1.8' strokeLinecap='round' />
-            <line x1='15.5' y1='8.5' x2='8.5' y2='15.5' stroke='#B91C1C' strokeWidth='1.8' strokeLinecap='round' />
+            <circle cx="12" cy="12" r="10" stroke="#B91C1C" strokeWidth="1.8" />
+            <line
+              x1="8.5"
+              y1="8.5"
+              x2="15.5"
+              y2="15.5"
+              stroke="#B91C1C"
+              strokeWidth="1.8"
+              strokeLinecap="round"
+            />
+            <line
+              x1="15.5"
+              y1="8.5"
+              x2="8.5"
+              y2="15.5"
+              stroke="#B91C1C"
+              strokeWidth="1.8"
+              strokeLinecap="round"
+            />
           </svg>
           <p
             style={{
               margin: 0,
               fontSize: 13,
               lineHeight: 1.55,
-              color: isLight ? '#B91C1C' : '#FCA5A5',
+              color: isLight ? "#B91C1C" : "#FCA5A5",
               fontFamily: "'DM Sans', sans-serif",
             }}
           >
-            You were not selected for this event by Young Professionals. We encourage you to apply
-            for upcoming opportunities.
+            You were not selected for this event. We encourage you to apply for
+            upcoming opportunities.
           </p>
         </div>
       )}
@@ -301,7 +340,7 @@ const EventFreePaymentSection = ({
       {!hasActiveBooking && !isSurveyMonkey && !isCancelledBooking && (
         <p
           className={styles.ed_free_info_text}
-          style={{ color: isLight ? '#555' : '#FFF' }}
+          style={{ color: isLight ? "#555" : "#FFF" }}
         >
           Join this event for free. <br />
           No booking required. Simply apply now to secure your spot.
@@ -310,19 +349,25 @@ const EventFreePaymentSection = ({
 
       {/* Action Button */}
       {!!activeBooking && isCancelledBooking ? (
-        <div style={{ padding: '8px 0', display: 'flex', justifyContent: 'center' }}>
+        <div
+          style={{
+            padding: "8px 0",
+            display: "flex",
+            justifyContent: "center",
+          }}
+        >
           <button
-            type='button'
+            type="button"
             disabled
             className={styles.ed_sold_out_btn}
             style={{
-              width: '100%',
-              background: 'rgba(239, 68, 68, 0.15)',
-              color: '#EF4444',
-              border: '1px solid rgba(239, 68, 68, 0.35)',
-              cursor: 'not-allowed',
+              width: "100%",
+              background: "rgba(239, 68, 68, 0.15)",
+              color: "#EF4444",
+              border: "1px solid rgba(239, 68, 68, 0.35)",
+              cursor: "not-allowed",
             }}
-            aria-label='Not Selected'
+            aria-label="Not Selected"
           >
             Not Selected
           </button>
@@ -332,9 +377,9 @@ const EventFreePaymentSection = ({
           {isClosed ? (
             <button
               className={styles.ed_sold_out_btn}
-              style={{ opacity: 0.5, cursor: 'not-allowed', width: '100%' }}
+              style={{ opacity: 0.5, cursor: "not-allowed", width: "100%" }}
               disabled
-              aria-label='Registration Closed'
+              aria-label="Registration Closed"
             >
               Registration Closed
             </button>
@@ -347,14 +392,15 @@ const EventFreePaymentSection = ({
               disabled={!isSurveyMonkey && isRegistering}
               className={styles.ed_book_now_btn}
               style={{
-                width: '100%',
+                width: "100%",
                 opacity: !isSurveyMonkey && isRegistering ? 0.8 : 1,
-                cursor: !isSurveyMonkey && isRegistering ? 'not-allowed' : 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
+                cursor:
+                  !isSurveyMonkey && isRegistering ? "not-allowed" : "pointer",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
                 gap: 8,
-                marginTop: '10px',
+                marginTop: "10px",
               }}
             >
               {!isSurveyMonkey && isRegistering ? (
@@ -363,17 +409,17 @@ const EventFreePaymentSection = ({
                     style={{
                       width: 16,
                       height: 16,
-                      border: '2px solid rgba(255,255,255,0.4)',
-                      borderTopColor: '#ffffff',
-                      borderRadius: '50%',
-                      display: 'inline-block',
-                      animation: 'freeRegisterSpin 0.7s linear infinite',
+                      border: "2px solid rgba(255,255,255,0.4)",
+                      borderTopColor: "#ffffff",
+                      borderRadius: "50%",
+                      display: "inline-block",
+                      animation: "freeRegisterSpin 0.7s linear infinite",
                     }}
                   />
                   Applying...
                 </>
               ) : (
-                'Apply Now'
+                "Apply Now"
               )}
               <style>{`
                 @keyframes freeRegisterSpin { to { transform: rotate(360deg); } }
@@ -383,62 +429,85 @@ const EventFreePaymentSection = ({
         </div>
       ) : isSurveyMonkey ? (
         isConfirmedBooking ? (
-          <div style={{ padding: '8px 0', display: 'flex', justifyContent: 'center' }}>
+          <div
+            style={{
+              padding: "8px 0",
+              display: "flex",
+              justifyContent: "center",
+            }}
+          >
             <button
-              type='button'
+              type="button"
               disabled
               className={styles.ed_booked_btn}
               style={{
-                width: '100%',
-                background: 'rgba(34, 197, 94, 0.15)',
-                color: '#22C55E',
-                border: '1px solid rgba(34, 197, 94, 0.35)',
-                cursor: 'default',
+                width: "100%",
+                background: "rgba(34, 197, 94, 0.15)",
+                color: "#22C55E",
+                border: "1px solid rgba(34, 197, 94, 0.35)",
+                cursor: "default",
               }}
-              aria-label='Confirmed'
+              aria-label="Confirmed"
             >
               Confirmed
             </button>
           </div>
         ) : (
-          <div style={{ padding: '8px 0', display: 'flex', justifyContent: 'center' }}>
+          <div
+            style={{
+              padding: "8px 0",
+              display: "flex",
+              justifyContent: "center",
+            }}
+          >
             <button
-              type='button'
+              type="button"
               onClick={openSurveyForm}
               className={styles.ed_book_now_btn}
-              style={{ width: '100%' }}
-              aria-label='Complete Survey Monkey  Form'
+              style={{ width: "100%" }}
+              aria-label="Complete the online form"
             >
-              Complete Survey Monkey  Form
+              Complete the online form
             </button>
           </div>
         )
       ) : (
-        <div style={{ padding: '24px 0 8px', display: 'flex', justifyContent: 'center' }}>
-          {external_registration_url ? (
-            <Link
-              href={external_registration_url}
-              target='_blank'
-              rel='noopener,noreferrer'
-              className={styles.ed_booked_btn}
-              style={{ width: '100%' }}
-              aria-label='Registered'
-            >
-              Applied
-            </Link>
-          ) : (
+        <div
+          style={{
+            padding: "24px 0 8px",
+            display: "flex",
+            justifyContent: "center",
+          }}
+        >
+          {isConfirmedBooking ? (
             <button
-              type='button'
+              type="button"
               disabled
               className={styles.ed_booked_btn}
               style={{
-                width: '100%',
-                background: 'rgba(234, 179, 8, 0.15)',
-                color: '#EAB308',
-                border: '1px solid rgba(234, 179, 8, 0.35)',
-                cursor: 'default',
+                width: "100%",
+                background: "rgba(34, 197, 94, 0.15)",
+                color: "#22C55E",
+                border: "1px solid rgba(34, 197, 94, 0.35)",
+                cursor: "default",
               }}
-              aria-label='Registration Started'
+              aria-label="Confirmed"
+            >
+              Confirmed
+            </button>
+          ) : (
+            <button
+              type="button"
+              disabled
+              className={styles.ed_booked_btn}
+              style={{
+                width: "100%",
+                background: "rgba(234, 179, 8, 0.15)",
+                color: "#EAB308",
+                border: "1px solid rgba(234, 179, 8, 0.35)",
+                cursor: "default",
+              }}
+              aria-label="Registration Started"
             >
               Registration Started
             </button>
@@ -449,7 +518,7 @@ const EventFreePaymentSection = ({
       <RegistrationStartedModal
         open={showStartedModal}
         onClose={() => {
-          if (!isRegistering) setShowStartedModal(false)
+          if (!isRegistering) setShowStartedModal(false);
         }}
         onCompleteForm={handleCompleteFormFromModal}
         isSubmitting={isRegistering}
@@ -457,7 +526,7 @@ const EventFreePaymentSection = ({
 
       {authGateModal}
     </div>
-  )
+  );
 }
 
 export default EventFreePaymentSection

@@ -6,11 +6,15 @@ import {
   setProfileCompletedCookie,
 } from "@/lib/authCookies";
 import { buildClientHeaders } from "@/lib/clientMeta";
+// TEMP: backend migration (VM -> Cloud Run) — remove after cutover
+import { getBackendUrl } from "@/lib/backendUrl";
 
-const BACKEND = process.env.BACKEND_URL;
+// const BACKEND = process.env.BACKEND_URL;  // TEMP: backend migration (VM -> Cloud Run) — remove after cutover (restore this line; BACKEND is now resolved at request time inside POST)
 
 export async function POST(req: NextRequest) {
   try {
+    // TEMP: backend migration (VM -> Cloud Run) — remove after cutover
+    const BACKEND = await getBackendUrl();
     const refresh_token = req.cookies.get("refresh")?.value;
     const clientHeaders = buildClientHeaders(req.cookies, req.headers);
 

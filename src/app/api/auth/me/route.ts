@@ -1,9 +1,13 @@
 // src/app/api/auth/me/route.ts
 import { NextResponse, NextRequest } from "next/server";
+// TEMP: backend migration (VM -> Cloud Run) — remove after cutover
+import { getBackendUrl } from "@/lib/backendUrl";
 
-const BACKEND = process.env.BACKEND_URL;
+// const BACKEND = process.env.BACKEND_URL;  // TEMP: backend migration (VM -> Cloud Run) — remove after cutover (restore this line; BACKEND is now resolved at request time inside callBackendMe)
 
 async function callBackendMe(access?: string, cookieHeader?: string) {
+  // TEMP: backend migration (VM -> Cloud Run) — remove after cutover
+  const BACKEND = await getBackendUrl();
   const headers: Record<string, string> = { "Content-Type": "application/json" };
   if (access) headers["Authorization"] = `Bearer ${access}`;
   if (!access && cookieHeader) headers["cookie"] = cookieHeader;

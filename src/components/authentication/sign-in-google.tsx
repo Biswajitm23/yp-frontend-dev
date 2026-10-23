@@ -5,7 +5,15 @@ import { useState, useEffect, useRef } from 'react'
 import { toast } from 'react-toastify'
 import { useSearchParams } from 'next/navigation'
 import { readCallbackUrl } from '@/lib/callbackUrl'
-export default function SignInGoogle () {
+import {
+  writeSocialAuthIntent,
+  type SocialAuthIntent
+} from '@/lib/socialAuthIntent'
+export default function SignInGoogle ({
+  mode = 'signup'
+}: {
+  mode?: SocialAuthIntent
+}) {
   const [isLoading, setIsLoading] = useState(false)
   const timeoutRef = useRef<number | null>(null)
   const searchParams = useSearchParams()
@@ -39,6 +47,9 @@ export default function SignInGoogle () {
   const handleSignIn = async () => {
     try {
       setIsLoading(true)
+
+      // Tells the signIn callback whether it may create an account
+      writeSocialAuthIntent(mode)
 
       // Sign in and redirect to the deep-link the user originally tried to
       // reach (e.g. an email "accept connection" URL) if one was preserved,

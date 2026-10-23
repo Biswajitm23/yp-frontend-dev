@@ -1,0 +1,11 @@
+{
+  "applinks": {
+    "apps": [],
+    "details": [
+      {
+        "appID": "497ED6H3DC.com.youngprofessionals.ypapp",
+        "paths": ["/booking/*"]
+      }
+    ]
+  }
+}

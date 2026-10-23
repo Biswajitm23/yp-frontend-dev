@@ -1,10 +1,14 @@
 import { NextResponse, NextRequest } from "next/server";
 import { requireAuth } from "@/lib/requireAuth";
+// TEMP: backend migration (VM -> Cloud Run) — remove after cutover
+import { getBackendUrl } from "@/lib/backendUrl";
 
-const BACKEND = process.env.BACKEND_URL;
+// const BACKEND = process.env.BACKEND_URL;  // TEMP: backend migration (VM -> Cloud Run) — remove after cutover (restore this line; BACKEND is now resolved at request time inside POST)
 
 export async function POST(req: NextRequest) {
   try {
+    // TEMP: backend migration (VM -> Cloud Run) — remove after cutover
+    const BACKEND = await getBackendUrl();
     const body = await req.json();
     const auth = await requireAuth();
     if (auth instanceof NextResponse) return auth;

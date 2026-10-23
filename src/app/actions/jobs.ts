@@ -137,6 +137,13 @@ export async function fetchSavedJobsAction(payload: FetchJobsPayload) {
   return res;
 }
 
+/** POST /api/web/user/featured-jobs — the Featured tab list. Strict auth: the
+ *  backend rejects anonymous calls to this endpoint. */
+export async function fetchFeaturedJobsAction(payload: FetchJobsPayload) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return api.post<any>(EP.featuredJobs, payload, { auth: "strict" });
+}
+
 /** POST /api/web/user/recommended-jobs — recommendations. Soft auth so logged-out
  *  visitors get generic recommendations (never 401), while a signed-in user gets
  *  the personalised payload. */

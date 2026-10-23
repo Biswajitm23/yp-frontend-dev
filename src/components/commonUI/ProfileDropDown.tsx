@@ -15,13 +15,14 @@ import { signOut } from "next-auth/react";
 import { clearAllListingState } from "@/app/hooks/useListingState";
 import Avatar from "./Avatar";
 import { useTheme, type ThemePreference, themePreferenceToApi } from "@/context/ThemeContext";
-import { Sun, Moon, Monitor, Trash2, AlertCircle, Mail, ShieldCheck, LogOut, UserRoundX } from "lucide-react";
+import { Sun, Moon, Monitor, Trash2, AlertCircle, Mail, ShieldCheck, LogOut, UserRoundX, Lock } from "lucide-react";
 import { createPortal } from "react-dom";
 import { Tooltip } from "@mui/material";
 import { useUpdateProfile } from "@/app/hooks/useUpdateProfile";
 import { buildProfilePreservePayload } from "@/services/profile.services";
 import { toast } from "react-toastify";
 import ConfirmModal from "./ConfirmModal";
+import ChangePasswordModal from "./ChangePasswordModal";
 import { deleteAccount } from "@/services/auth.services";
 import { useAuthGate } from "@/app/hooks/useAuthGate";
 import { authUrlWithCallback } from "@/lib/callbackUrl";
@@ -58,6 +59,11 @@ export default function ProfileDropdown({
   const { ensureAuthed, gateModal: authGateModal } = useAuthGate();
   const [isLogoutOpen, setIsLogoutOpen] = useState(false);
   const [pendingLogout, setPendingLogout] = useState(false);
+  // "View Profile" is only offered once onboarding is done; the API sends
+  // profile_completion_status as "1"/1 when complete and "0" otherwise.
+  const profileStatus = userProfile?.data?.profile_completion_status;
+  const isProfileComplete =
+    profileStatus === "1" || profileStatus === 1 || profileStatus === true || profileStatus === "true";
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
@@ -148,6 +154,23 @@ export default function ProfileDropdown({
       setPendingLogout(false);
     }
   }, [anchorEl, pendingLogout]);
+
+  const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
+  const [pendingChangePassword, setPendingChangePassword] = useState(false);
+
+  const handleChangePasswordClick = () => {
+    ensureAuthed("change your password", () => {
+      setPendingChangePassword(true);
+      handleClose();
+    });
+  };
+
+  useEffect(() => {
+    if (!anchorEl && pendingChangePassword) {
+      setIsChangePasswordOpen(true);
+      setPendingChangePassword(false);
+    }
+  }, [anchorEl, pendingChangePassword]);
 
   const handleDeleteAccountClick = () => {
     ensureAuthed("delete your account", () => {
@@ -465,6 +488,25 @@ export default function ProfileDropdown({
           </span>
         </MenuItem>
 
+        {isAuthenticated && (
+          <MenuItem
+            onClick={handleChangePasswordClick}
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+              color: `${resolvedTheme === "light" ? "#040F1F" : "#a0aec0"} !important`,
+              fontWeight: 500,
+              fontSize: "14px",
+            }}
+          >
+            <Lock size={16} color={resolvedTheme === "light" ? "#040F1F" : "#a0aec0"} />
+            <span style={{ color: resolvedTheme === "light" ? "#040F1F" : "#a0aec0", fontWeight: 500 }}>
+              Change Password
+            </span>
+          </MenuItem>
+        )}
+
         {/* <MenuItem
           onClick={() => {
             handleClose();
@@ -514,13 +556,15 @@ export default function ProfileDropdown({
               />,
               <div key="account-actions" className={styles.profiledropdown_info_area}>
                 {/* <Link href={`/profile/${userId}`}> */}
-                <MenuItem
-                  className={resolvedTheme === "light" ? "light-save-btn" : "menuItem view_profile_btn"}
-                  onClick={handleProfileClick}
-                  // href={`/profile/${userId}`}
-                >
-                  View Profile
-                </MenuItem>
+                {isProfileComplete && (
+                  <MenuItem
+                    className={resolvedTheme === "light" ? "light-save-btn" : "menuItem view_profile_btn"}
+                    onClick={handleProfileClick}
+                    // href={`/profile/${userId}`}
+                  >
+                    View Profile
+                  </MenuItem>
+                )}
 
                 {/* <Divider sx={{ my: 0.5 }} style={{background: '#A3A3A3', margin: '10px 0px'}} /> */}
                 <Link href="#">
@@ -550,6 +594,11 @@ export default function ProfileDropdown({
               </div>,
             ]}
       </Menu>
+
+      <ChangePasswordModal
+        open={isChangePasswordOpen}
+        onOpenChange={setIsChangePasswordOpen}
+      />
 
       <ConfirmModal
         isOpen={isLogoutOpen}

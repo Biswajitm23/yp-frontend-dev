@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from 'react'
 import { CustomModalForm, type FormField } from '../modals/CustomModalForm'
-import { GraduationCap, MailIcon, Phone, MapPin, Calendar } from 'lucide-react'
+import { GraduationCap, MailIcon, Phone, MapPin, Calendar, Pencil } from 'lucide-react'
 import styles from '../../moduleCss/profile.module.css'
 import { checkPhoneAvailability } from '@/services/profile.services'
 import { toast } from 'react-toastify'
@@ -19,6 +19,7 @@ import { useTheme, themePreferenceToApi } from '@/context/ThemeContext'
 import { useUpdateProfile } from '@/app/hooks/useUpdateProfile'
 import { useAuthGate } from '@/app/hooks/useAuthGate'
 import jobstyles from '@/moduleCss/jobs.module.css'
+import UpdateEmailModal from './UpdateEmailModal'
 
 type Props = {
   firstName?: string
@@ -522,13 +523,27 @@ export default function ProfileInfoCard ({
 
               <div className={styles.profile_info_area}>
                 <p
-                  className={`${styles.profile_info} ${styles.location_wrapper}`}
+                  className={`${styles.profile_info} ${styles.location_wrapper} ${styles.email_wrapper}`}
                 >
                   <span className={styles.location_text}>
                     <MailIcon className={styles.location_icon} />
                     Email
                   </span>
-                  {formValues.email}
+                  <span className='flex items-center gap-2'>
+                    {formValues.email}
+                    <button
+                      type='button'
+                      aria-label='Edit Email'
+                      className='cursor-pointer shrink-0'
+                      onClick={() =>
+                        ensureAuthed('update your email', () =>
+                          setOpenModal('email')
+                        )
+                      }
+                    >
+                      <Pencil size={14} />
+                    </button>
+                  </span>
                 </p>
 
                 {formValues.phone && (
@@ -589,6 +604,15 @@ export default function ProfileInfoCard ({
           </div>
         </div>
       </div>
+      <UpdateEmailModal
+        open={openModal === 'email'}
+        onOpenChange={open => setOpenModal(open ? 'email' : null)}
+        currentEmail={formValues.email}
+        onEmailUpdated={newEmail => {
+          setFormValues(prev => ({ ...prev, email: newEmail }))
+          onProfileUpdated?.({ email: newEmail })
+        }}
+      />
       {authGateModal}
     </>
   )

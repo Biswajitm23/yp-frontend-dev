@@ -79,10 +79,16 @@ export async function resetPassword(
     { auth: "none" },
   );
 
+  // RETURN the failure, never throw it: a production build strips the message
+  // off any error thrown inside a Server Action (the browser gets a 500 and
+  // "Minified React error #441"), so a wrong/expired OTP would lose the
+  // backend's own explanation. The call site reads `status === "ERROR"`.
   if (res.status !== "OK") {
-    throw new Error(
-      res.message || "An error occurred while processing your request.",
-    );
+    return {
+      status: "ERROR",
+      message:
+        res.message || "An error occurred while processing your request.",
+    };
   }
 
   return (res.data ?? { message: "OK", status: "OK" }) as AuthResponse;
@@ -107,4 +113,83 @@ export async function resendOtp(
   }
 
   return (res.data ?? { message: "OK", status: "OK" }) as AuthResponse;
+}
+
+// ── Change email (logged-in) ────────────────────────────────────────────────
+// Two-step flow from the profile page: send-otp mails a code to the NEW
+// address, verify-otp confirms it and swaps the account email. Both are strict
+// writes (the gateway attaches the access cookie as a Bearer). Failures are
+// RETURNED, not thrown, for the same reason as resetPassword above — a thrown
+// Server Action error loses the backend's message in a production build.
+
+export async function sendUpdateEmailOtp(email: string): Promise<AuthResponse> {
+  const res = await api.post<AuthResponse>(
+    "/api/mobile/auth/update-email/send-otp",
+    { email },
+    { auth: "strict" },
+  );
+
+  if (res.status !== "OK") {
+    return {
+      status: "ERROR",
+      message: res.message || "Failed to send OTP. Please try again.",
+    };
+  }
+
+  return { ...(res.data ?? { message: "OTP sent successfully" }), status: "OK" };
+}
+
+export async function verifyUpdateEmailOtp(
+  email: string,
+  otp: string,
+): Promise<AuthResponse> {
+  const res = await api.post<AuthResponse>(
+    "/api/mobile/auth/update-email/verify-otp",
+    { email, otp },
+    { auth: "strict" },
+  );
+
+  if (res.status !== "OK") {
+    return {
+      status: "ERROR",
+      message: res.message || "The OTP is invalid or has expired",
+    };
+  }
+
+  return {
+    ...(res.data ?? { message: "Email updated successfully" }),
+    status: "OK",
+  };
+}
+
+// ── Change password (logged-in) ─────────────────────────────────────────────
+// Strict write from the profile dropdown. Failure is RETURNED, not thrown, so
+// the backend's own message (e.g. wrong current password) survives a
+// production build — see resetPassword above.
+export async function updatePassword(
+  currentPassword: string,
+  newPassword: string,
+): Promise<AuthResponse> {
+  const res = await api.post<AuthResponse>(
+    "/api/mobile/auth/update-password",
+    // Social-login accounts may have no password yet, so the current password
+    // is only sent when the user actually entered one.
+    {
+      ...(currentPassword ? { current_password: currentPassword } : {}),
+      new_password: newPassword,
+    },
+    { auth: "strict" },
+  );
+
+  if (res.status !== "OK") {
+    return {
+      status: "ERROR",
+      message: res.message || "Failed to update password. Please try again.",
+    };
+  }
+
+  return {
+    ...(res.data ?? { message: "Password updated successfully" }),
+    status: "OK",
+  };
 }
