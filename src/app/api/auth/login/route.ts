@@ -10,7 +10,7 @@ import {
 import { buildClientHeaders } from "@/lib/clientMeta";
 import { extractSessionId } from "@/lib/userSession";
 // TEMP: backend migration (VM -> Cloud Run) — remove after cutover
-import { getBackendUrl } from "@/lib/backendUrl";
+import { getBackendUrl, getBackendServerCode } from "@/lib/backendUrl";
 
 // const BACKEND = process.env.BACKEND_URL;  // TEMP: backend migration (VM -> Cloud Run) — remove after cutover (restore this line; BACKEND is now resolved at request time inside POST)
 
@@ -42,6 +42,8 @@ export async function POST(req: NextRequest) {
       identifier,
       value: identifier === "email" ? email : phone,
       password: body.password,
+      // TEMP: backend migration (VM -> Cloud Run) — remove after cutover
+      server: await getBackendServerCode(),
     };
 
     // console.log("Login payload:", payload);

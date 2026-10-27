@@ -30,7 +30,7 @@ import {
 } from "@/lib/authCookies";
 import { buildClientHeaders } from "@/lib/clientMeta";
 // TEMP: backend migration (VM -> Cloud Run) — remove after cutover
-import { getBackendUrl } from "@/lib/backendUrl";
+import { getBackendUrl, getBackendServerCode } from "@/lib/backendUrl";
 
 // const BACKEND = process.env.BACKEND_URL;  // TEMP: backend migration (VM -> Cloud Run) — remove after cutover (restore this line; BACKEND is now resolved at request time inside POST)
 
@@ -62,7 +62,11 @@ export async function POST(req: NextRequest) {
         Authorization: `Bearer ${access}`,
       },
       // Omitted rather than sent as null when there is nothing to send.
-      body: JSON.stringify(sessionId ? { session_id: sessionId } : {}),
+      // TEMP: backend migration (VM -> Cloud Run) — remove after cutover
+      body: JSON.stringify({
+        ...(sessionId ? { session_id: sessionId } : {}),
+        server: await getBackendServerCode(),
+      }),
       // A hung backend must not pile up 3-minutely pending requests.
       signal: AbortSignal.timeout(10_000),
     });

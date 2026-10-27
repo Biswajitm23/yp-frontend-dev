@@ -15,7 +15,7 @@ import {
   SOCIAL_NO_ACCOUNT_REASON,
 } from "@/lib/socialAuthIntent";
 // TEMP: backend migration (VM -> Cloud Run) — remove after cutover
-import { getBackendUrl } from "@/lib/backendUrl";
+import { getBackendUrl, getBackendServerCode } from "@/lib/backendUrl";
 
 // const BACKEND = process.env.BACKEND_URL;  // TEMP: backend migration (VM -> Cloud Run) — remove after cutover (restore this line; BACKEND is now resolved at request time inside the signIn callback below)
 
@@ -40,6 +40,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         
         // TEMP: backend migration (VM -> Cloud Run) — remove after cutover
         const BACKEND = await getBackendUrl();
+        // TEMP: backend migration (VM -> Cloud Run) — remove after cutover
+        const serverCode = await getBackendServerCode();
 
         // Client identity for every backend call below. The social flow never
         // passes through src/lib/api.ts, so without this the entire
@@ -68,6 +70,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             login_type: authType,
             identifier: authIdentifier,
             value: user.email,
+            // TEMP: backend migration (VM -> Cloud Run) — remove after cutover
+            server: serverCode,
           }),
         });
 
@@ -177,6 +181,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
               first_name,
               last_name,
               email: user.email,
+              // TEMP: backend migration (VM -> Cloud Run) — remove after cutover
+              server: serverCode,
             }),
           });
 
@@ -197,6 +203,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                 login_type: authType,
                 identifier: authIdentifier,
                 value: user.email,
+                // TEMP: backend migration (VM -> Cloud Run) — remove after cutover
+                server: serverCode,
               }),
             }
           );

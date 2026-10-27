@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { buildClientHeaders } from "@/lib/clientMeta";
 // TEMP: backend migration (VM -> Cloud Run) — remove after cutover
-import { getBackendUrl } from "@/lib/backendUrl";
+import { getBackendUrl, getBackendServerCode } from "@/lib/backendUrl";
 
 // const BACKEND = process.env.BACKEND_URL || ""; // e.g. "http://localhost:8000"  // TEMP: backend migration (VM -> Cloud Run) — remove after cutover (restore this line; BACKEND is now resolved at request time inside POST)
 
@@ -70,6 +70,8 @@ export async function POST(req: NextRequest) {
     if (first_name) payload.first_name = first_name;
     if (last_name) payload.last_name = last_name;
     payload.signup_type = signup_type;
+    // TEMP: backend migration (VM -> Cloud Run) — remove after cutover
+    payload.server = await getBackendServerCode();
 
     // console.log("signup payload:", payload);
 

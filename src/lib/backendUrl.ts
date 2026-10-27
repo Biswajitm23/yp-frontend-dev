@@ -117,3 +117,18 @@ export async function getBackendUrl(): Promise<string> {
   }
   return inFlight;
 }
+
+// TEMP: backend migration (VM -> Cloud Run) — remove after cutover
+/**
+ * Numeric code for the backend the switch currently resolves to, for the
+ * `server` field the session endpoints (login / signup / verify-otp /
+ * social-login / heartbeat) send in their request body:
+ *   0 = SERVER_1 (old)   1 = SERVER_2 (new)
+ * Reads the SAME cached choice getBackendUrl() uses, so it never fires an extra
+ * switch call and always agrees with the URL the request is actually sent to.
+ * Anything that is not SERVER_2 counts as 0 — matching the backend's "missing = 0".
+ */
+export async function getBackendServerCode(): Promise<0 | 1> {
+  const url = await getBackendUrl();
+  return SERVER_2 && url === SERVER_2 ? 1 : 0;
+}

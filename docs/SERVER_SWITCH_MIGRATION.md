@@ -174,3 +174,59 @@ curl -s https://yp-backend-776364212876.us-central1.run.app/api/web/server-switc
   resolves independently — expect up to ~60s for a flag change to apply fleet-wide.
 - Both servers share the same database and JWT secret, so users stay logged in
   across the switch.
+
+---
+
+## 9. ADDENDUM — `server` body field + "which server" toast (temporary)
+
+Two additions on top of the runtime switch above. Both are temporary and tagged
+`// TEMP: backend migration (VM -> Cloud Run) — remove after cutover`, so the
+same grep finds them. **Nothing from the original codebase was changed, deleted,
+or moved — these are purely additive.**
+
+### 9a. Send `"server"` on the 5 session endpoints (Feature 2)
+
+The backend wants to know which server the web is on for each session call. We
+send it in the request **body** as a number: **`0` = SERVER_1 (old)**,
+**`1` = SERVER_2 (new)**. The value comes from the SAME runtime choice every
+other call uses (so it always matches the URL the request is sent to).
+
+- **New helper** in `src/lib/backendUrl.ts`: `getBackendServerCode(): Promise<0|1>`
+  — reads the cached `getBackendUrl()` result; returns `1` only when it equals
+  `SERVER_2`, else `0` (matches the backend's "missing = 0").
+- `"server"` added to the request body in:
+  | Endpoint | File | How |
+  |---|---|---|
+  | login | `src/app/api/auth/login/route.ts` | `server:` added to `payload` |
+  | signup | `src/app/api/auth/signup/route.ts` | `server:` added to body |
+  | verify-otp | `src/app/api/auth/verify/route.ts` | `{ ...body, server }` |
+  | social-login | `src/app/api/auth/social-login/route.ts` | `{ ...body, server }` |
+  | heartbeat | `src/app/api/auth/session/heartbeat/route.ts` | `server:` added to body |
+  | social (real path) | `src/auth.ts` | `server: serverCode` on the login, signup, and login-after-signup calls |
+
+  Each of those files also had its import widened from `{ getBackendUrl }` to
+  `{ getBackendUrl, getBackendServerCode }`.
+
+### 9b. "Connected to Server N" toast (Feature 3)
+
+A one-per-launch toast confirms which backend the switch resolved to, so we can
+see the frontend is synced to the server the backend chose.
+
+- **Created** `src/app/api/server-info/route.ts` — read-only `GET` that returns
+  `{ data: { server: 0|1 } }` (the NUMBER only, never the URL).
+- **Created** `src/components/commonUI/ServerSwitchToast.tsx` — client component,
+  fetches `/api/server-info` once per launch and fires `toast.info("Connected to
+  Server 1/2 …")` using the EXISTING react-toastify `ToastContainer` (no new
+  styling). Renders `null`.
+- **Mounted** in `src/app/layout.tsx` with one line (`<ServerSwitchToast />`)
+  next to the existing `<ToastContainer>`, plus its import.
+
+### 9c. How to revert 9a + 9b
+1. `grep -rn "TEMP: backend migration" .` — delete the tagged lines added above
+   and restore the widened imports back to `{ getBackendUrl }`.
+2. Delete the 2 created files:
+   - `src/app/api/server-info/route.ts`
+   - `src/components/commonUI/ServerSwitchToast.tsx`
+3. In `src/app/layout.tsx` remove the `<ServerSwitchToast />` line and its import.
+4. Remove `getBackendServerCode` from `src/lib/backendUrl.ts` (or delete the whole
+   file per §6 if reverting the entire migration).

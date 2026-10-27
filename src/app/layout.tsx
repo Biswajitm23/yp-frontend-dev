@@ -7,6 +7,8 @@ import '../styles/quill-content.css'
 import Providers from './providers/Providers'
 import { Zoom, ToastContainer } from 'react-toastify'
 import BackgroundOverlay from '@/components/ui/BackgroundOverlay'
+// TEMP: backend migration (VM -> Cloud Run) — remove after cutover
+import ServerSwitchToast from '@/components/commonUI/ServerSwitchToast'
 
 const dmSans = DM_Sans({
   subsets: ['latin'],
@@ -110,6 +112,8 @@ export default function RootLayout ({
           transition={Zoom}
           
         />
+        {/* TEMP: backend migration (VM -> Cloud Run) — remove after cutover */}
+        <ServerSwitchToast />
       </body>
     </html>
   )

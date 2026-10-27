@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { buildClientHeaders } from "@/lib/clientMeta";
 // TEMP: backend migration (VM -> Cloud Run) — remove after cutover
-import { getBackendUrl } from "@/lib/backendUrl";
+import { getBackendUrl, getBackendServerCode } from "@/lib/backendUrl";
 
 // const BACKEND = process.env.BACKEND_URL;  // TEMP: backend migration (VM -> Cloud Run) — remove after cutover (restore this line; BACKEND is now resolved at request time inside POST)
 
@@ -28,6 +28,8 @@ export async function POST(req: NextRequest) {
       body: JSON.stringify({
         email: body.email,
         full_name: body.full_name || body.name || "User",
+        // TEMP: backend migration (VM -> Cloud Run) — remove after cutover
+        server: await getBackendServerCode(),
       }),
     });
 
