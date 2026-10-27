@@ -1,1 +1,32 @@
-{"timestamp":"00:00:03.143","source":"Server","level":"LOG","message":""}
+{"timestamp":"00:00:42.310","source":"Server","level":"LOG","message":""}
+{"timestamp":"00:00:42.344","source":"Server","level":"LOG","message":"✓ Generated CLAUDE.md for AI agents. Set `agentRules: false` in next.config to disable."}
+{"timestamp":"00:00:48.168","source":"Server","level":"LOG","message":"○ Compiling /zz-email-check ..."}
+{"timestamp":"00:01:13.136","source":"Server","level":"WARN","message":"⚠ ./\nWarning: Failed to find font override values for font `Alumni Sans SC`\nSkipping generating a fallback font.\n\n"}
+{"timestamp":"00:01:15.622","source":"Server","level":"WARN","message":"⚠ ./\nWarning: Failed to find font override values for font `Alumni Sans SC`\nSkipping generating a fallback font.\n\n"}
+{"timestamp":"00:01:15.709","source":"Browser","level":"INFO","message":"Download the React DevTools for a better development experience: https://react.dev/link/react-devtools"}
+{"timestamp":"00:01:19.423","source":"Server","level":"LOG","message":"○ Compiling /api/auth/has-session ..."}
+{"timestamp":"00:01:20.498","source":"Server","level":"WARN","message":"⚠ ./\nWarning: Failed to find font override values for font `Alumni Sans SC`\nSkipping generating a fallback font.\n\n"}
+{"timestamp":"00:01:21.746","source":"Server","level":"WARN","message":"⚠ ./\nWarning: Failed to find font override values for font `Alumni Sans SC`\nSkipping generating a fallback font.\n\n"}
+{"timestamp":"00:01:22.222","source":"Server","level":"WARN","message":"⚠ ./\nWarning: Failed to find font override values for font `Alumni Sans SC`\nSkipping generating a fallback font.\n\n"}
+{"timestamp":"00:01:23.879","source":"Server","level":"WARN","message":"⚠ ./\nWarning: Failed to find font override values for font `Alumni Sans SC`\nSkipping generating a fallback font.\n\n"}
+{"timestamp":"00:01:24.075","source":"Server","level":"WARN","message":"⚠ ./\nWarning: Failed to find font override values for font `Alumni Sans SC`\nSkipping generating a fallback font.\n\n"}
+{"timestamp":"00:01:24.632","source":"Server","level":"WARN","message":"⚠ ./\nWarning: Failed to find font override values for font `Alumni Sans SC`\nSkipping generating a fallback font.\n\n"}
+{"timestamp":"00:01:36.741","source":"Server","level":"WARN","message":"⚠ ./\nWarning: Failed to find font override values for font `Alumni Sans SC`\nSkipping generating a fallback font.\n\n"}
+{"timestamp":"00:01:36.763","source":"Server","level":"WARN","message":"⚠ ./\nWarning: Failed to find font override values for font `Alumni Sans SC`\nSkipping generating a fallback font.\n\n"}
+{"timestamp":"00:01:36.804","source":"Server","level":"WARN","message":"⚠ ./\nWarning: Failed to find font override values for font `Alumni Sans SC`\nSkipping generating a fallback font.\n\n"}
+{"timestamp":"00:01:40.816","source":"Server","level":"WARN","message":"⚠ ./\nWarning: Failed to find font override values for font `Alumni Sans SC`\nSkipping generating a fallback font.\n\n"}
+{"timestamp":"00:01:41.594","source":"Server","level":"WARN","message":"⚠ ./\nWarning: Failed to find font override values for font `Alumni Sans SC`\nSkipping generating a fallback font.\n\n"}
+{"timestamp":"00:02:10.280","source":"Server","level":"WARN","message":"⚠ ./\nWarning: Failed to find font override values for font `Alumni Sans SC`\nSkipping generating a fallback font.\n\n"}
+{"timestamp":"00:02:10.990","source":"Server","level":"WARN","message":"⚠ ./\nWarning: Failed to find font override values for font `Alumni Sans SC`\nSkipping generating a fallback font.\n\n"}
+{"timestamp":"00:02:11.021","source":"Server","level":"WARN","message":"⚠ ./\nWarning: Failed to find font override values for font `Alumni Sans SC`\nSkipping generating a fallback font.\n\n"}
+{"timestamp":"00:02:11.137","source":"Server","level":"WARN","message":"⚠ ./\nWarning: Failed to find font override values for font `Alumni Sans SC`\nSkipping generating a fallback font.\n\n"}
+{"timestamp":"00:02:11.230","source":"Browser","level":"INFO","message":"Download the React DevTools for a better development experience: https://react.dev/link/react-devtools"}
+{"timestamp":"00:02:11.674","source":"Server","level":"WARN","message":"⚠ ./\nWarning: Failed to find font override values for font `Alumni Sans SC`\nSkipping generating a fallback font.\n\n"}
+{"timestamp":"00:02:11.748","source":"Server","level":"WARN","message":"⚠ ./\nWarning: Failed to find font override values for font `Alumni Sans SC`\nSkipping generating a fallback font.\n\n"}
+{"timestamp":"00:02:11.964","source":"Server","level":"WARN","message":"⚠ ./\nWarning: Failed to find font override values for font `Alumni Sans SC`\nSkipping generating a fallback font.\n\n"}
+{"timestamp":"00:02:12.083","source":"Server","level":"WARN","message":"⚠ ./\nWarning: Failed to find font override values for font `Alumni Sans SC`\nSkipping generating a fallback font.\n\n"}
+{"timestamp":"00:02:12.392","source":"Server","level":"WARN","message":"⚠ ./\nWarning: Failed to find font override values for font `Alumni Sans SC`\nSkipping generating a fallback font.\n\n"}
+{"timestamp":"00:02:12.696","source":"Server","level":"WARN","message":"⚠ ./\nWarning: Failed to find font override values for font `Alumni Sans SC`\nSkipping generating a fallback font.\n\n"}
+{"timestamp":"00:02:12.967","source":"Server","level":"WARN","message":"⚠ ./\nWarning: Failed to find font override values for font `Alumni Sans SC`\nSkipping generating a fallback font.\n\n"}
+{"timestamp":"00:02:13.261","source":"Server","level":"WARN","message":"⚠ ./\nWarning: Failed to find font override values for font `Alumni Sans SC`\nSkipping generating a fallback font.\n\n"}
+{"timestamp":"00:02:13.560","source":"Server","level":"WARN","message":"⚠ ./\nWarning: Failed to find font override values for font `Alumni Sans SC`\nSkipping generating a fallback font.\n\n"}

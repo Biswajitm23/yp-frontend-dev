@@ -11,42 +11,31 @@ import {
   sendUpdateEmailOtp,
   verifyUpdateEmailOtp
 } from '@/services/auth.services'
+import { maskEmail, validateNewEmail } from '@/lib/emailValidation'
 
 const OTP_LENGTH = 6
 const EMPTY_OTP = Array<string>(OTP_LENGTH).fill('')
 // Same cooldown as the auth verify screen
 const RESEND_COOLDOWN = 90
 
-// bis***********5679@gmail.com — keeps the first 3 and last 4 characters of
-// the local part; shorter names keep only as much as leaves something masked.
-const maskEmail = (email: string) => {
-  const at = email.lastIndexOf('@')
-  if (at < 1) return email
-  const name = email.slice(0, at)
-  const head = Math.min(3, name.length - 1)
-  const tail = Math.min(4, Math.max(0, name.length - head - 1))
-  return (
-    name.slice(0, head) +
-    '*'.repeat(name.length - head - tail) +
-    name.slice(name.length - tail) +
-    email.slice(at)
-  )
-}
-
 type Props = {
   open: boolean
   onOpenChange: (open: boolean) => void
   currentEmail?: string
   onEmailUpdated?: (email: string) => void
+  // Element that gets focus back when the modal closes (the Edit Email pencil)
+  returnFocusRef?: React.RefObject<HTMLElement | null>
 }
 
 export default function UpdateEmailModal ({
   open,
   onOpenChange,
   currentEmail,
-  onEmailUpdated
+  onEmailUpdated,
+  returnFocusRef
 }: Props) {
   const [email, setEmail] = useState('')
+  const emailInputRef = useRef<HTMLInputElement>(null)
   // One entry per box — same six-box OTP field as the auth verify screen.
   const [otpDigits, setOtpDigits] = useState<string[]>(EMPTY_OTP)
   const otpRefs = useRef<(HTMLInputElement | null)[]>([])
@@ -79,16 +68,9 @@ export default function UpdateEmailModal ({
 
   const handleSendOtp = async () => {
     const newEmail = email.trim()
-    if (!newEmail) {
-      toast.error('Email is required')
-      return
-    }
-    if (!/^\S+@\S+\.\S+$/.test(newEmail)) {
-      toast.error('Please enter a valid email address')
-      return
-    }
-    if (newEmail.toLowerCase() === (currentEmail ?? '').trim().toLowerCase()) {
-      toast.error('New email must be different from your current email')
+    const error = validateNewEmail(newEmail, currentEmail)
+    if (error) {
+      toast.error(error)
       return
     }
 
@@ -242,6 +224,20 @@ export default function UpdateEmailModal ({
           : "Enter your new email address"
       }
       width="max-w-md"
+      // Long addresses must wrap inside the modal instead of overflowing it
+      headerClassName="[overflow-wrap:anywhere]"
+      // Move focus into the modal so Radix's focus trap keeps Tab inside it
+      // (focus left on the page behind escapes the trap), and hand it back to
+      // the Edit Email pencil on close (there is no DialogTrigger to return to).
+      onOpenAutoFocus={(e) => {
+        e.preventDefault()
+        emailInputRef.current?.focus()
+      }}
+      onCloseAutoFocus={(e) => {
+        if (!returnFocusRef?.current) return
+        e.preventDefault()
+        returnFocusRef.current.focus()
+      }}
       contentClassName="backdrop-blur-xl border shadow-2xl !rounded-xl bg-white border-gray-200 text-gray-900 [&_*]:text-gray-900 dark:bg-gradient-to-br dark:from-blue-600/20 dark:via-blue-500/15 dark:to-blue-700/20 dark:border-white/20 dark:text-white dark:[&_*]:text-white"
       footer={
         <div className="flex items-center justify-end gap-3">
@@ -271,6 +267,7 @@ export default function UpdateEmailModal ({
         <div className="space-y-2 form-input-custom">
           <Label htmlFor="newEmail">New Email</Label>
           <Input
+            ref={emailInputRef}
             id="newEmail"
             name="newEmail"
             type="email"

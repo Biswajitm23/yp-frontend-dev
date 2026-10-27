@@ -3,6 +3,9 @@ import { NextResponse, NextRequest } from "next/server";
 // TEMP: backend migration (VM -> Cloud Run) — remove after cutover
 import { getBackendUrl } from "@/lib/backendUrl";
 
+// Bounds each upstream call so this session check always answers.
+const UPSTREAM_TIMEOUT_MS = 15000;
+
 // const BACKEND = process.env.BACKEND_URL;  // TEMP: backend migration (VM -> Cloud Run) — remove after cutover (restore this line; BACKEND is now resolved at request time inside callBackendMe)
 
 async function callBackendMe(access?: string, cookieHeader?: string) {
@@ -15,6 +18,7 @@ async function callBackendMe(access?: string, cookieHeader?: string) {
   const res = await fetch(`${BACKEND}/api/mobile/token/refresh`, {
     method: "GET",
     headers,
+    signal: AbortSignal.timeout(UPSTREAM_TIMEOUT_MS),
   });
 
   const data = await res.json().catch(() => ({}));
@@ -43,6 +47,7 @@ export async function GET(req: NextRequest) {
     const refreshResp = await fetch(`${origin}/api/auth/refresh`, {
       method: "POST",
       headers: { cookie: cookieHeader, "Content-Type": "application/json" },
+      signal: AbortSignal.timeout(UPSTREAM_TIMEOUT_MS),
     });
 
     if (!refreshResp.ok) return NextResponse.json({ user: null }, { status: 401 });

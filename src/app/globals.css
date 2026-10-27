@@ -2175,12 +2175,14 @@ select {
   border-radius: 20px !important;
   border: 0 !important;
   background-color: #fff;
-  background-image: url('/_next/static/media/gradient-bg.512ca683.png');
 }
 .dark .custom-popup {
   background: #040f1f33;
   background-color: #040f1f;
-  background-image: url('/_next/static/media/gradient-bg.512ca683.png');
+  /* Relative path so the bundler emits the image under this build's hash; the
+     old hard-coded /_next/static/media/gradient-bg.<hash>.png URL 404'd.
+     Light theme stays plain white, as in the other popups. */
+  background-image: url('../_assets/images/gradient-bg.png');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
@@ -2874,6 +2876,13 @@ select {
   padding: 8px;
   min-height: 50px;
   width: calc(100% + 20px);
+}
+/* react-toastify makes the container full-screen-width on phones; the extra
+   20px above then pushes the toast past the left edge of the screen. */
+@media only screen and (max-width: 480px) {
+  .Toastify__toast {
+    width: 100%;
+  }
 }
 
 .custom-autocomplete-dropdown .dropdowm-select-bg {

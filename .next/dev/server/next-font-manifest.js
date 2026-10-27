@@ -1,1 +1,1 @@
-self.__NEXT_FONT_MANIFEST="{\n  \"app\": {},\n  \"appUsingSizeAdjust\": false,\n  \"pages\": {},\n  \"pagesUsingSizeAdjust\": false\n}"
+self.__NEXT_FONT_MANIFEST="{\n  \"app\": {\n    \"[project]/src/app/zz-email-check/page\": [\n      \"static/media/5c285b27cdda1fe8-s.p.2_mbdogr7ni8i.woff2\",\n      \"static/media/8bc6419d5d8f9c7b.p.2hqetygt062p7.woff2\",\n      \"static/media/fba5a26ea33df6a3-s.p.18rizl4rsrl42.woff2\"\n    ]\n  },\n  \"appUsingSizeAdjust\": true,\n  \"pages\": {},\n  \"pagesUsingSizeAdjust\": false\n}"

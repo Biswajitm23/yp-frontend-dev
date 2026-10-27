@@ -9,6 +9,10 @@ import { buildClientHeaders } from "@/lib/clientMeta";
 // TEMP: backend migration (VM -> Cloud Run) — remove after cutover
 import { getBackendUrl } from "@/lib/backendUrl";
 
+// Bounds each backend call so a silent backend can't leave the refresh (and
+// every request waiting on it in the proxy) pending forever.
+const BACKEND_TIMEOUT_MS = 10000;
+
 // const BACKEND = process.env.BACKEND_URL;  // TEMP: backend migration (VM -> Cloud Run) — remove after cutover (restore this line; BACKEND is now resolved at request time inside POST)
 
 export async function POST(req: NextRequest) {
@@ -29,6 +33,7 @@ export async function POST(req: NextRequest) {
       method: "POST",
       headers: { ...clientHeaders, "Content-Type": "application/json" },
       body: JSON.stringify({ refresh_token }),
+      signal: AbortSignal.timeout(BACKEND_TIMEOUT_MS),
     });
 
     const data = await res.json().catch(() => ({}));
@@ -59,6 +64,7 @@ export async function POST(req: NextRequest) {
             ...clientHeaders,
             Authorization: `Bearer ${newAccess}`,
           },
+          signal: AbortSignal.timeout(BACKEND_TIMEOUT_MS),
         });
 
         if (profileRes.ok) {

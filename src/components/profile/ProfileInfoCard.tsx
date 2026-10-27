@@ -1,7 +1,7 @@
 // components/profile/ProfileInfoCard.tsx
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { CustomModalForm, type FormField } from '../modals/CustomModalForm'
 import { GraduationCap, MailIcon, Phone, MapPin, Calendar, Pencil } from 'lucide-react'
 import styles from '../../moduleCss/profile.module.css'
@@ -111,6 +111,7 @@ export default function ProfileInfoCard ({
   }
 
   const [openModal, setOpenModal] = useState<string | null>(null)
+  const editEmailButtonRef = useRef<HTMLButtonElement>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isPhoneValid, setIsPhoneValid] = useState(true)
 
@@ -532,6 +533,7 @@ export default function ProfileInfoCard ({
                   <span className='flex items-center gap-2'>
                     {formValues.email}
                     <button
+                      ref={editEmailButtonRef}
                       type='button'
                       aria-label='Edit Email'
                       className='cursor-pointer shrink-0'
@@ -608,6 +610,7 @@ export default function ProfileInfoCard ({
         open={openModal === 'email'}
         onOpenChange={open => setOpenModal(open ? 'email' : null)}
         currentEmail={formValues.email}
+        returnFocusRef={editEmailButtonRef}
         onEmailUpdated={newEmail => {
           setFormValues(prev => ({ ...prev, email: newEmail }))
           onProfileUpdated?.({ email: newEmail })

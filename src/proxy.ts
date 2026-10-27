@@ -13,6 +13,13 @@ import {
 const ACCESS_EXPIRY_SKEW_SECONDS = 30;
 
 /**
+ * Upper bound for the refresh round-trip below. Every request (the page, the
+ * session checks, data calls) waits on it, so an unanswered refresh used to
+ * leave the whole page pending forever.
+ */
+const REFRESH_TIMEOUT_MS = 15000;
+
+/**
  * Is the access token past (or about to pass) its `exp`?
  *
  * The cookie used to carry a maxAge equal to the token TTL, so an expired token
@@ -209,12 +216,21 @@ async function route(
   // ----------------------------------
   if ((!access || isAccessExpired(access)) && refresh) {
     const origin = process.env.NEXT_PUBLIC_APP_URL || req.nextUrl.origin;
-    const refreshRes = await fetch(`${origin}/api/auth/refresh`, {
-      method: "POST",
-      headers: {
-        Cookie: req.headers.get("cookie") || "",
-      },
-    });
+    let refreshRes: Response;
+    try {
+      refreshRes = await fetch(`${origin}/api/auth/refresh`, {
+        method: "POST",
+        headers: {
+          Cookie: req.headers.get("cookie") || "",
+        },
+        signal: AbortSignal.timeout(REFRESH_TIMEOUT_MS),
+      });
+    } catch (err) {
+      // Timed out / unreachable: that says nothing about the tokens, so keep
+      // them and let the request through instead of hanging or logging out.
+      console.error("Token refresh did not answer:", err);
+      return next();
+    }
 
     if (refreshRes.ok) {
       const res = next();

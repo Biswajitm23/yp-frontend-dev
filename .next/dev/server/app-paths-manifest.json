@@ -1,1 +1,7 @@
-{}
+{
+  "/api/auth/[...nextauth]/route": "app/api/auth/[...nextauth]/route.js",
+  "/api/auth/has-session/route": "app/api/auth/has-session/route.js",
+  "/api/auth/session/heartbeat/route": "app/api/auth/session/heartbeat/route.js",
+  "/api/server-info/route": "app/api/server-info/route.js",
+  "/zz-email-check/page": "app/zz-email-check/page.js"
+}

@@ -526,6 +526,11 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$clientMeta$2e$
 ;
 /** Refresh this many seconds BEFORE the token actually expires (clock skew). */ const ACCESS_EXPIRY_SKEW_SECONDS = 30;
 /**
+ * Upper bound for the refresh round-trip below. Every request (the page, the
+ * session checks, data calls) waits on it, so an unanswered refresh used to
+ * leave the whole page pending forever.
+ */ const REFRESH_TIMEOUT_MS = 15000;
+/**
  * Is the access token past (or about to pass) its `exp`?
  *
  * The cookie used to carry a maxAge equal to the token TTL, so an expired token
@@ -677,12 +682,21 @@ async function route(req, minted) {
     // ----------------------------------
     if ((!access || isAccessExpired(access)) && refresh) {
         const origin = ("TURBOPACK compile-time value", "http://localhost:3000") || req.nextUrl.origin;
-        const refreshRes = await fetch(`${origin}/api/auth/refresh`, {
-            method: "POST",
-            headers: {
-                Cookie: req.headers.get("cookie") || ""
-            }
-        });
+        let refreshRes;
+        try {
+            refreshRes = await fetch(`${origin}/api/auth/refresh`, {
+                method: "POST",
+                headers: {
+                    Cookie: req.headers.get("cookie") || ""
+                },
+                signal: AbortSignal.timeout(REFRESH_TIMEOUT_MS)
+            });
+        } catch (err) {
+            // Timed out / unreachable: that says nothing about the tokens, so keep
+            // them and let the request through instead of hanging or logging out.
+            console.error("Token refresh did not answer:", err);
+            return next();
+        }
         if (refreshRes.ok) {
             const res = next();
             const setCookie = refreshRes.headers.get("set-cookie");

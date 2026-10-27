@@ -28,6 +28,10 @@ export interface CustomModalProps {
   maxHeight?: string
   width?: string
   scrollAreaClassName?: string
+  // Override where focus goes when the modal opens / closes. Defaults keep
+  // focus where it is on open and let Radix handle the close.
+  onOpenAutoFocus?: (event: Event) => void
+  onCloseAutoFocus?: (event: Event) => void
 }
 
 export function CustomModal({
@@ -44,7 +48,9 @@ export function CustomModal({
   footerClassName,
   maxHeight = "85vh",
   width = "max-w-2xl",
-  scrollAreaClassName
+  scrollAreaClassName,
+  onOpenAutoFocus = (e) => e.preventDefault(),
+  onCloseAutoFocus
 }: CustomModalProps) {
   // Lay the dialog out as a column — header/footer stay pinned to the top and
   // bottom (shrink-0) while the ScrollArea claims the remaining space
@@ -59,7 +65,8 @@ export function CustomModal({
         showCloseButton={showCloseButton}
         className={cn("!flex !flex-col !h-auto", width, contentClassName)}
         style={{ maxHeight }}
-        onOpenAutoFocus={(e) => e.preventDefault()}
+        onOpenAutoFocus={onOpenAutoFocus}
+        onCloseAutoFocus={onCloseAutoFocus}
       >
         {(title || description) && (
           <DialogHeader className={cn("shrink-0", headerClassName)}>
